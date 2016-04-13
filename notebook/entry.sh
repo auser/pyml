@@ -74,6 +74,15 @@ c.InteractiveShell.xmode = 'Context'
 # c.IPKernelApp.pylab = 'inline'
 c.InteractiveShellApp.matplotlib = 'inline'
 c.NotebookApp.notebook_dir = os.path.expanduser('~/notebooks/')
+
+import os
+import sys
+
+if 'SPARK_HOME' not in os.environ:
+    os.environ['SPARK_HOME'] = '/usr/local/spark'
+
+if '/opt/spark/python' not in sys.path:
+    sys.path.insert(0, '/usr/local/spark/python')
 EOF
 
 chown -R $USER_LOGIN $(dirname $(ipython locate profile))
