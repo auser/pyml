@@ -116,9 +116,9 @@ WORKDIR /usr/local/
 # PySpark
 # Spark dependencies
 ENV APACHE_SPARK_VERSION 1.6.0
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends openjdk-7-jre-headless && \
-    apt-get clean
+# RUN apt-get update && \
+#     apt-get install -y --no-install-recommends openjdk-7-jre-headless && \
+#     apt-get clean
 # RUN wget -qO - http://d3kbcqa49mib13.cloudfront.net/spark-${APACHE_SPARK_VERSION}-bin-hadoop2.6.tgz | tar -xz -C /usr/local/ && \
 #     cd /usr/local && \
 #     ln -s spark-${APACHE_SPARK_VERSION}-bin-hadoop2.6 spark
@@ -148,9 +148,11 @@ RUN apt-get update && \
 #     apt-get clean
 
 ## Java
+RUN apt-get install -yq python-software-properties
+RUN apt-get install -yq default-jdk
 # RUN apt-add-repository ppa:webupd8team/java
 # RUN apt-get update -yq
-# RUN apt-get install -yq oracle-java7-installer
+# RUN apt-get install -yq --no-install-recommends oracle-java7-installer
 #
 # Scala
 RUN wget http://www.scala-lang.org/files/archive/scala-2.11.8.deb
@@ -160,32 +162,37 @@ RUN pip install py4j
 WORKDIR /usr/local
 # ## Spark
 RUN curl -sL -o "/usr/local/spark-$APACHE_SPARK_VERSION.tgz" "http://d3kbcqa49mib13.cloudfront.net/spark-$APACHE_SPARK_VERSION.tgz"
+
 RUN tar xvf "spark-$APACHE_SPARK_VERSION.tgz" && \
-    mv "/usr/local/spark-$APACHE_SPARK_VERSION" "$SPARK_HOME" && \
-    cd "$SPARK_HOME" && \
-    build/sbt assembly
+    mv "/usr/local/spark-$APACHE_SPARK_VERSION" "$SPARK_HOME"
 
-RUN pip install numpy scipy scikit-learn nolearn keras
-RUN pip install cv2
+RUN cd "$SPARK_HOME" && build/sbt assembly
 
+ADD requirements.txt /tmp/requirements.txt
+
+RUN pip2 install --no-cache-dir -r /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+
+RUN rm /tmp/requirements.txt
 # Julia
 # Julia dependencies
-RUN apt-get update &&  \
-    apt-get install -y julia libnettle4 && \
-    apt-get clean
+# RUN apt-get update &&  \
+#     apt-get install -y julia libnettle4 && \
+#     apt-get clean
 
 # IJulia and Julia packages
-RUN julia -e 'Pkg.add("IJulia")'
-RUN julia -e 'Pkg.add("Gadfly")' && julia -e 'Pkg.add("RDatasets")'
+# RUN julia -e 'Pkg.add("IJulia")'
+# RUN julia -e 'Pkg.add("Gadfly")' && julia -e 'Pkg.add("RDatasets")'
 
 # Extra Kernels
-RUN pip install --user --no-cache-dir bash_kernel && \
-    python -m bash_kernel.install
+# RUN pip install --user --no-cache-dir ipyparallel && \
+#     ipcluster nbextension enable
 
 VOLUME /home/compute
 
 ENV USER_GID compute-users
 RUN addgroup $USER_GID
+ENV PYTHONPATH "$SPARK_HOME/python:${PYTHONPATH}"
 
 ADD entry.sh /opt/compute-container/entry.sh
 RUN chmod u+x /opt/compute-container/entry.sh

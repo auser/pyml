@@ -41,8 +41,21 @@ echo $PASSWORD > $PASSWORD_FILE
 
 cat<<EOF | sudo tee ${CONF_FILE}
 import os
+import sys
+
 os.environ['SHELL'] = '/bin/bash'
 os.environ['PYTHONPATH'] = '${PYTHONPATH}:${NOTEBOOK_DIR}'
+
+# Configure the environment
+os.environ['SPARK_HOME'] = '${SPARK_HOME}'
+
+# Create a variable for our root path
+SPARK_HOME = os.environ['SPARK_HOME']
+
+# Add the PySpark/py4j to the Python Path
+# sys.path.insert(0, os.path.join(SPARK_HOME, "python", "lib"))
+# sys.path.insert(0, os.path.join(SPARK_HOME, "python", "pyspark"))
+# sys.path.insert(0, os.path.join(SPARK_HOME, "python"))
 
 c = get_config()
 c.NotebookApp.ip = '0.0.0.0'
@@ -74,15 +87,6 @@ c.InteractiveShell.xmode = 'Context'
 # c.IPKernelApp.pylab = 'inline'
 c.InteractiveShellApp.matplotlib = 'inline'
 c.NotebookApp.notebook_dir = os.path.expanduser('~/notebooks/')
-
-import os
-import sys
-
-if 'SPARK_HOME' not in os.environ:
-    os.environ['SPARK_HOME'] = '/usr/local/spark'
-
-if '/opt/spark/python' not in sys.path:
-    sys.path.insert(0, '/usr/local/spark/python')
 EOF
 
 chown -R $USER_LOGIN $(dirname $(ipython locate profile))
