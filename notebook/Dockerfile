@@ -4,25 +4,27 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
-ENV OPENCV_VERSION 2.4.12.3
+#2.4.12.3
+ENV OPENCV_VERSION 3.1.0
 ENV SPARK_VERSION "1.6.0"
 ENV SPARK_HOME "/usr/local/spark"
 
 ENV LD_LIBRARY_PATH /usr/local/lib
 
 RUN apt-get update -yq
-RUN apt-get -y dist-upgrade
+RUN apt-get -yq dist-upgrade
 
 # Install git, bc and dependencies
-RUN apt-get install -y \
+RUN apt-get install -yq \
   git \
   bc \
   cmake \
   libgflags-dev \
   libavcodec-dev \
-  libjpeg8-dev libtiff4-dev libjasper-dev libpng12-dev \
+  libjpeg-dev libpng-dev libtiff-dev libjasper-dev \
   libavformat-dev \
-  libswscale-dev libv4l-dev \
+  libswscale-dev \
+  libv4l-dev \
   libgoogle-glog-dev \
   libopencv-dev \
   libleveldb-dev \
@@ -52,19 +54,28 @@ RUN apt-get install -y \
   python-numpy \
   python-scipy \
   python-opencv \
+  python2.7-dev \
   python3.4-dev
 
 ## Install OpenCV
-RUN apt-get install -yq libavcodec-dev libavformat-dev libswscale-dev
 RUN apt-get install -yq libjpeg-dev libpng-dev libtiff-dev libjasper-dev
 
-RUN apt-get -qq -y install libopencv-dev \
-                           libjpeg-dev libjasper-dev libavcodec-dev libavformat-dev libswscale-dev \
-                           libdc1394-22-dev libxine-dev libgstreamer0.10-dev \
-                           libgstreamer-plugins-base0.10-dev libv4l-dev \
-                           libtbb-dev libqt4-dev libgtk2.0-dev \
-                           libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev \
-                           libtheora-dev libvorbis-dev libxvidcore-dev x264 v4l-utils
+RUN apt-get -qq -y install libdc1394-22-dev \
+                           libxine-dev libgstreamer0.10-dev \
+                           libgstreamer-plugins-base0.10-dev \
+                           libv4l-dev \
+                           libtbb-dev \
+                           libqt4-dev \
+                           libgtk2.0-dev \
+                           qt5-default \
+                           libmp3lame-dev \
+                           libopencore-amrnb-dev \
+                           libopencore-amrwb-dev \
+                           libtheora-dev \
+                           libvorbis-dev \
+                           libxvidcore-dev \
+                           x264 \
+                           v4l-utils
 
 RUN git clone https://github.com/itseez/opencv.git /usr/local/src/opencv
 
@@ -72,8 +83,7 @@ WORKDIR /usr/local/src/opencv
 
 RUN git clone https://github.com/Itseez/opencv_contrib.git /usr/local/src/opencv_contrib
 
-RUN git checkout "$OPENCV_VERSION" \
-	  && mkdir release
+RUN git checkout "$OPENCV_VERSION" && mkdir release
 
 # RUN cd /usr/local/src/opencv/release && \
 #     cmake -D CMAKE_BUILD_TYPE=RELEASE \
@@ -87,26 +97,27 @@ RUN git checkout "$OPENCV_VERSION" \
 
 RUN cd /usr/local/src/opencv/release && \
     cmake -G "Unix Makefiles" \
-    -D CMAKE_CXX_COMPILER=/usr/bin/g++ \
-    -D CMAKE_C_COMPILER=/usr/bin/gcc \
-    -D OPENCV_EXTRA_MODULES_PATH=/usr/local/src/opencv_contrib \
+    -D OPENCV_EXTRA_MODULES_PATH=/usr/local/src/opencv_contrib/modules \
     -D CMAKE_BUILD_TYPE=RELEASE \
     -D CMAKE_INSTALL_PREFIX=/usr/local \
     -D WITH_TBB=ON \
-    -D BUILD_NEW_PYTHON_SUPPORT=ON \
     -D WITH_V4L=ON \
-    -D INSTALL_C_EXAMPLES=ON \
+    -D INSTALL_C_EXAMPLES=OFF \
     -D INSTALL_PYTHON_EXAMPLES=ON \
-    -D BUILD_EXAMPLES=ON \
+    -D BUILD_EXAMPLES=OFF \
     -D WITH_QT=ON \
-    -D WITH_OPENGL=ON \
-    -D BUILD_FAT_JAVA_LIB=ON \
     -D INSTALL_TO_MANGLED_PATHS=ON \
     -D INSTALL_CREATE_DISTRIB=ON \
     -D INSTALL_TESTS=ON \
-    -D CUDA_GENERATION=Kepler \
-    -D ENABLE_FAST_MATH=ON -D WITH_IMAGEIO=ON -D BUILD_SHARED_LIBS=OFF -D WITH_GSTREAMER=ON ..
+    -D ENABLE_FAST_MATH=ON \
+    -D BUILD_SHARED_LIBS=OFF \
+    -D WITH_GSTREAMER=ON ..
+    # -D BUILD_NEW_PYTHON_SUPPORT=ON \
+    # -D CUDA_GENERATION=Kepler \
+    # -D WITH_IMAGEIO=ON \
 
+# /usr/local/lib/python2.7/
+# /usr/local/lib/python3.4/
 
 RUN cd /usr/local/src/opencv/release && \
       make all -j4 && \
