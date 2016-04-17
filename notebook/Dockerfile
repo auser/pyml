@@ -1,4 +1,4 @@
-FROM bethgelab/jupyter-torch:cuda7.0-cudnn4
+FROM bethgelab/jupyter-torch:cuda7.5-cudnn4
 
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
@@ -41,7 +41,9 @@ RUN apt-get install -y --no-install-recommends libboost-all-dev
 # Install build-essential, git, python-dev, pip and other dependencies
 RUN apt-get install -y \
   build-essential \
+  checkinstall \
   cmake \
+  pkg-config yasm \
   git \
   python-dev \
   libopenblas-dev \
@@ -53,6 +55,17 @@ RUN apt-get install -y \
   python3.4-dev
 
 ## Install OpenCV
+RUN apt-get install -yq libavcodec-dev libavformat-dev libswscale-dev
+RUN apt-get install -yq libjpeg-dev libpng-dev libtiff-dev libjasper-dev
+
+RUN apt-get -qq -y install libopencv-dev \
+                           libjpeg-dev libjasper-dev libavcodec-dev libavformat-dev libswscale-dev \
+                           libdc1394-22-dev libxine-dev libgstreamer0.10-dev \
+                           libgstreamer-plugins-base0.10-dev libv4l-dev \
+                           libtbb-dev libqt4-dev libgtk2.0-dev \
+                           libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev \
+                           libtheora-dev libvorbis-dev libxvidcore-dev x264 v4l-utils
+
 RUN git clone https://github.com/itseez/opencv.git /usr/local/src/opencv
 
 WORKDIR /usr/local/src/opencv
@@ -62,19 +75,41 @@ RUN git clone https://github.com/Itseez/opencv_contrib.git /usr/local/src/opencv
 RUN git checkout "$OPENCV_VERSION" \
 	  && mkdir release
 
-RUN cd /usr/local/src/opencv/release && \
-    cmake -D CMAKE_BUILD_TYPE=RELEASE \
-	    -D CMAKE_INSTALL_PREFIX=/usr/local \
-	    -D INSTALL_PYTHON_EXAMPLES=ON \
-      -D OPENCV_EXTRA_MODULES_PATH=/usr/local/src/opencv_contrib \
-	    -D BUILD_EXAMPLES=OFF \
-      -D INSTALL_C_EXAMPLES=OFF \
-      -D WITH_IPP=ON \
-      -D INSTALL_PYTHON_EXAMPLES=ON \
-      ..
+# RUN cd /usr/local/src/opencv/release && \
+#     cmake -D CMAKE_BUILD_TYPE=RELEASE \
+# 	    -D CMAKE_INSTALL_PREFIX=/usr/local \
+# 	    -D INSTALL_PYTHON_EXAMPLES=ON \
+# 	    -D BUILD_EXAMPLES=OFF \
+#       -D INSTALL_C_EXAMPLES=OFF \
+#       -D WITH_IPP=ON \
+#       -D INSTALL_PYTHON_EXAMPLES=ON \
+      # ..
 
 RUN cd /usr/local/src/opencv/release && \
-      make -j4 && \
+    cmake -G "Unix Makefiles" \
+    -D CMAKE_CXX_COMPILER=/usr/bin/g++ \
+    -D CMAKE_C_COMPILER=/usr/bin/gcc \
+    -D OPENCV_EXTRA_MODULES_PATH=/usr/local/src/opencv_contrib \
+    -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D WITH_TBB=ON \
+    -D BUILD_NEW_PYTHON_SUPPORT=ON \
+    -D WITH_V4L=ON \
+    -D INSTALL_C_EXAMPLES=ON \
+    -D INSTALL_PYTHON_EXAMPLES=ON \
+    -D BUILD_EXAMPLES=ON \
+    -D WITH_QT=ON \
+    -D WITH_OPENGL=ON \
+    -D BUILD_FAT_JAVA_LIB=ON \
+    -D INSTALL_TO_MANGLED_PATHS=ON \
+    -D INSTALL_CREATE_DISTRIB=ON \
+    -D INSTALL_TESTS=ON \
+    -D CUDA_GENERATION=Kepler \
+    -D ENABLE_FAST_MATH=ON -D WITH_IMAGEIO=ON -D BUILD_SHARED_LIBS=OFF -D WITH_GSTREAMER=ON ..
+
+
+RUN cd /usr/local/src/opencv/release && \
+      make all -j4 && \
       make install && \
       ldconfig
 
@@ -167,6 +202,23 @@ RUN tar xvf "spark-$APACHE_SPARK_VERSION.tgz" && \
     mv "/usr/local/spark-$APACHE_SPARK_VERSION" "$SPARK_HOME"
 
 RUN cd "$SPARK_HOME" && build/sbt assembly
+
+# [ TensorFlow ]
+
+RUN apt-get update && apt-get install -y \
+  curl \
+  libfreetype6-dev \
+  libpng12-dev \
+  libzmq3-dev \
+  pkg-config
+
+RUN pip2 install --upgrade \
+    https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow-0.8.0rc0-cp27-none-linux_x86_64.whl
+
+RUN pip3 install --upgrade \
+    https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow-0.8.0rc0-cp34-cp34m-linux_x86_64.whl
+
+# [ python deps ]
 
 ADD requirements.txt /tmp/requirements.txt
 
