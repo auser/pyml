@@ -12,3 +12,4 @@ nolearn
 
 py4j
 cv2
+jupyter
