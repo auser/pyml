@@ -54,46 +54,77 @@ RUN apt-get install -y \
   python-numpy \
   python-scipy \
   python-opencv \
+  python-tk \
   python2.7-dev \
-  python3.4-dev
+  python3-dev \
+  python3-tk \
+  python3-numpy
 
-## Install OpenCV
-RUN apt-get install -yq libjpeg-dev libpng-dev libtiff-dev libjasper-dev
+# [ Spark ]
+# Spark dependencies
 
-RUN apt-get -qq -y install libdc1394-22-dev \
-                           libxine-dev libgstreamer0.10-dev \
-                           libgstreamer-plugins-base0.10-dev \
-                           libv4l-dev \
-                           libtbb-dev \
-                           libqt4-dev \
-                           libgtk2.0-dev \
-                           qt5-default \
-                           libmp3lame-dev \
-                           libopencore-amrnb-dev \
-                           libopencore-amrwb-dev \
-                           libtheora-dev \
-                           libvorbis-dev \
-                           libxvidcore-dev \
-                           x264 \
-                           v4l-utils
+## Java
+RUN apt-get install -yq python-software-properties
+RUN apt-get install -yq default-jdk ant
+# RUN apt-add-repository ppa:webupd8team/java
+# RUN apt-get update -yq
+# RUN apt-get install -yq --no-install-recommends oracle-java7-installer
+#
+# Scala
+RUN wget http://www.scala-lang.org/files/archive/scala-2.11.8.deb
+RUN dpkg -i scala-2.11.8.deb
+## Py4J
+RUN pip install py4j
+WORKDIR /usr/local
+# ## Spark
+RUN curl -sL -o "/usr/local/spark-$SPARK_VERSION.tgz" "http://d3kbcqa49mib13.cloudfront.net/spark-$SPARK_VERSION.tgz"
 
-RUN git clone https://github.com/itseez/opencv.git /usr/local/src/opencv
+RUN tar xvf "spark-$SPARK_VERSION.tgz" && \
+    mv "/usr/local/spark-$SPARK_VERSION" "$SPARK_HOME"
+
+RUN cd "$SPARK_HOME" && build/sbt assembly
+
+# [ OpenCV ]
+
+# GUI:
+RUN apt-get install -yq qt5-default libvtk6-dev
+
+# Media I/O:
+RUN apt-get install -yq zlib1g-dev \
+            libjpeg-dev \
+            libwebp-dev \
+            libpng-dev \
+            libtiff5-dev \
+            libjasper-dev \
+            libopenexr-dev \
+            libgdal-dev
+
+# Video I/O:
+RUN apt-get install -yq libdc1394-22-dev \
+            libavcodec-dev libavformat-dev \
+            libswscale-dev libtheora-dev \
+            libvorbis-dev libxvidcore-dev \
+            libx264-dev yasm \
+            libopencore-amrnb-dev \
+            libopencore-amrwb-dev libv4l-dev libxine2-dev
+
+# Parallelism and linear algebra libraries:
+RUN apt-get install -yq \
+    libtbb-dev \
+    libeigen3-dev \
+    libtesseract-dev
+
+RUN apt-get clean -yq
 
 WORKDIR /usr/local/src/opencv
-
+RUN git clone https://github.com/itseez/opencv.git /usr/local/src/opencv
 RUN git clone https://github.com/Itseez/opencv_contrib.git /usr/local/src/opencv_contrib
-
 RUN git checkout "$OPENCV_VERSION" && mkdir release
 
-# RUN cd /usr/local/src/opencv/release && \
-#     cmake -D CMAKE_BUILD_TYPE=RELEASE \
-# 	    -D CMAKE_INSTALL_PREFIX=/usr/local \
-# 	    -D INSTALL_PYTHON_EXAMPLES=ON \
-# 	    -D BUILD_EXAMPLES=OFF \
-#       -D INSTALL_C_EXAMPLES=OFF \
-#       -D WITH_IPP=ON \
-#       -D INSTALL_PYTHON_EXAMPLES=ON \
-      # ..
+ENV PYTHONPATH="/usr/local/lib/python2.7/site-packages:$PYTHONPATH"
+ENV PYTHONPATH="/usr/local/lib/python3.4/site-packages:$PYTHONPATH"
+
+ENV CUDA_LIB_PATH=/usr/local/cuda/lib64/stubs/
 
 RUN cd /usr/local/src/opencv/release && \
     cmake -G "Unix Makefiles" \
@@ -102,16 +133,22 @@ RUN cd /usr/local/src/opencv/release && \
     -D CMAKE_INSTALL_PREFIX=/usr/local \
     -D WITH_TBB=ON \
     -D WITH_V4L=ON \
-    -D INSTALL_C_EXAMPLES=OFF \
+    -D INSTALL_C_EXAMPLES=ON \
+    -D BUILD_EXAMPLES=ON \
     -D INSTALL_PYTHON_EXAMPLES=ON \
-    -D BUILD_EXAMPLES=OFF \
+    -D BUILD_opencv_python2=ON \
+    -D BUILD_opencv_python3=ON \
     -D WITH_QT=ON \
-    -D INSTALL_TO_MANGLED_PATHS=ON \
-    -D INSTALL_CREATE_DISTRIB=ON \
-    -D INSTALL_TESTS=ON \
+    -D WITH_GDAL=ON \
+    -D WITH_XINE=ON \
+    -D WITH_OPENGL=ON \
     -D ENABLE_FAST_MATH=ON \
-    -D BUILD_SHARED_LIBS=OFF \
+    -D BUILD_SHARED_LIBS=ON \
+    -D INSTALL_TESTS=OFF \
     -D WITH_GSTREAMER=ON ..
+    # -D FORCE_VTK=ON \
+    # -D INSTALL_CREATE_DISTRIB=ON \
+    # -D INSTALL_TO_MANGLED_PATHS=ON \
     # -D BUILD_NEW_PYTHON_SUPPORT=ON \
     # -D CUDA_GENERATION=Kepler \
     # -D WITH_IMAGEIO=ON \
@@ -119,19 +156,13 @@ RUN cd /usr/local/src/opencv/release && \
 # /usr/local/lib/python2.7/
 # /usr/local/lib/python3.4/
 
+
 RUN cd /usr/local/src/opencv/release && \
       make all -j4 && \
       make install && \
       ldconfig
 
-RUN rm -rf /usr/local/src/opencv \
-  	  && apt-get purge -y cmake \
-  	  && apt-get autoremove -y --purge
-
-# ADD ./build_opencv.sh /tmp/build.sh
-# RUN bash /tmp/build.sh \
-# 	&& rm /tmp/build.sh
-
+RUN apt-get purge -yq cmake && apt-get autoremove -yq --purge
 
 # Install bleeding-edge Theano
 RUN pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git
@@ -149,70 +180,14 @@ RUN apt-get install -y \
   python-h5py \
   python-yaml
 
-# Upgrade six
-RUN pip install --upgrade six
-
 # Clone Keras repo and move into it
-RUN cd /usr/local && git clone https://github.com/fchollet/keras.git && cd keras && \
-  # Install
-  python setup.py install
+RUN cd /usr/local && \
+    git clone https://github.com/fchollet/keras.git
 
+RUN cd /usr/local/keras && python2 setup.py install
+RUN cd /usr/local/keras && python3 setup.py install
 
 WORKDIR /usr/local/
-# PySpark
-# Spark dependencies
-ENV APACHE_SPARK_VERSION 1.6.0
-# RUN apt-get update && \
-#     apt-get install -y --no-install-recommends openjdk-7-jre-headless && \
-#     apt-get clean
-# RUN wget -qO - http://d3kbcqa49mib13.cloudfront.net/spark-${APACHE_SPARK_VERSION}-bin-hadoop2.6.tgz | tar -xz -C /usr/local/ && \
-#     cd /usr/local && \
-#     ln -s spark-${APACHE_SPARK_VERSION}-bin-hadoop2.6 spark
-
-# # Scala Spark kernel (build and cleanup)
-# RUN cd /tmp && \
-#     echo deb http://dl.bintray.com/sbt/debian / > /etc/apt/sources.list.d/sbt.list && \
-#     apt-get update && \
-#     git clone https://github.com/ibm-et/spark-kernel.git && \
-#     apt-get install -yq --force-yes --no-install-recommends sbt
-
-# RUN cd /tmp/spark-kernel && \
-#     sbt compile -Xms1024M \
-#         -Xmx2048M \
-#         -Xss1M \
-#         -XX:+CMSClassUnloadingEnabled \
-#         -XX:MaxPermSize=1024M
-
-# RUN cd /tmp/spark-kernel && \
-#     sbt assembly && \
-#     mv kernel/target/pack /opt/sparkkernel && \
-#     chmod +x /opt/sparkkernel && \
-#     rm -rf ~/.ivy2 && \
-#     rm -rf ~/.sbt && \
-#     rm -rf /tmp/spark-kernel && \
-#     apt-get remove -y sbt && \
-#     apt-get clean
-
-## Java
-RUN apt-get install -yq python-software-properties
-RUN apt-get install -yq default-jdk
-# RUN apt-add-repository ppa:webupd8team/java
-# RUN apt-get update -yq
-# RUN apt-get install -yq --no-install-recommends oracle-java7-installer
-#
-# Scala
-RUN wget http://www.scala-lang.org/files/archive/scala-2.11.8.deb
-RUN dpkg -i scala-2.11.8.deb
-## Py4J
-RUN pip install py4j
-WORKDIR /usr/local
-# ## Spark
-RUN curl -sL -o "/usr/local/spark-$APACHE_SPARK_VERSION.tgz" "http://d3kbcqa49mib13.cloudfront.net/spark-$APACHE_SPARK_VERSION.tgz"
-
-RUN tar xvf "spark-$APACHE_SPARK_VERSION.tgz" && \
-    mv "/usr/local/spark-$APACHE_SPARK_VERSION" "$SPARK_HOME"
-
-RUN cd "$SPARK_HOME" && build/sbt assembly
 
 # [ TensorFlow ]
 
@@ -237,6 +212,12 @@ RUN pip2 install --upgrade --no-cache-dir -r /tmp/requirements.txt
 RUN pip3 install --upgrade --no-cache-dir -r /tmp/requirements.txt
 
 RUN rm /tmp/requirements.txt
+
+# RUN ln -s /usr/lib/python2.7/dist-packages/cv2.so /usr/lib/python3/dist-packages/cv2.so
+# RUN ln -s /usr/lib/python2.7/dist-packages/cv2.py /usr/lib/python3/dist-packages/cv2.py
+# RUN ln -s /usr/lib/python2.7/dist-packages/cv2.pyc /usr/lib/python3/dist-packages/cv2.pyc
+# RUN ls -l /usr/lib/python3/dist-packages
+
 # Julia
 # Julia dependencies
 # RUN apt-get update &&  \
@@ -250,6 +231,14 @@ RUN rm /tmp/requirements.txt
 # Extra Kernels
 # RUN pip install --user --no-cache-dir ipyparallel && \
 #     ipcluster nbextension enable
+
+# RUN mkdir -p /usr/lib/python3/site-packages/
+RUN find /usr/local -name "cv2.so"
+RUN ls -l /usr/local/src/opencv/release/lib/
+RUN ls -l /usr/local/src/opencv/release/lib/python3
+RUN ln -s /usr/local/src/opencv/release/lib/cv2.* /usr/lib/python3/dist-packages/
+RUN ln -s /usr/local/src/opencv/release/lib/python3/cv2.* /usr/lib/python3/dist-packages/
+RUN ls -l /usr/lib/python3/dist-packages
 
 VOLUME /home/compute
 

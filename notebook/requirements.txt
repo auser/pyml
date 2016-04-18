@@ -9,6 +9,7 @@ keras
 numpy
 scipy
 nolearn
+six
 
 py4j
 cv2
