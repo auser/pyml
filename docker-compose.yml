@@ -1,64 +1,68 @@
-notebook:
-  build: ./notebook
-  ports:
-    - 8888:8888
-  links:
-    - spark_master
-  volumes_from:
-    - notebook_data
+version: "2"
 
-notebook_data:
-  image: busybox
-  command: /bin/true
-  volumes:
-    - /home/compute
+services:
+  consul:
+    image: progrium/consul
+    restart: always
+    hostname: consul
+    ports:
+      - 8500:8500
+    command: "-server -bootstrap"
 
-spark_master:
-  build: ./spark/master
-  command: bin/spark-class org.apache.spark.deploy.master.Master -h master
-  hostname: master
-  environment:
-    MASTER: spark://master:7077
-    SPARK_CONF_DIR: /conf
-  expose:
-    - 7001
-    - 7002
-    - 7003
-    - 7004
-    - 7005
-    - 7006
-    - 7077
-    - 6066
-  ports:
-    - 4040:4040
-    - 6066:6066
-    - 7077:7077
-    - 8080:8080
-  volumes:
-    - ./conf/master:/conf
-    - ./data:/tmp/data
+  notebook:
+    build: ./notebook
+    ports:
+      - 8888:8888
+    links:
+      - spark_master
+    volumes_from:
+      - notebook_data
 
-spark_worker:
-  build: ./spark/worker
-  command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
-  hostname: worker
-  environment:
-    SPARK_CONF_DIR: /conf
-    SPARK_WORKER_CORES: 2
-    SPARK_WORKER_MEMORY: 1g
-    SPARK_WORKER_PORT: 8881
-    SPARK_WORKER_WEBUI_PORT: 8081
-  links:
-    - spark_master
-  expose:
-    - 7012
-    - 7013
-    - 7014
-    - 7015
-    - 7016
-    - 8881
-  ports:
-    - 8081
-  volumes:
-    - ./conf/worker:/conf
-    - ./data:/tmp/data
+  notebook_data:
+    image: busybox
+    command: /bin/true
+    volumes:
+      - /home/compute
+
+  spark_master:
+    build: ./spark/master
+    container_name: spark_master
+    command: bin/spark-class org.apache.spark.deploy.master.Master -h master
+    hostname: spark_master
+    environment:
+      - constraint:role==master
+    ports:
+      - 4040:4040
+      - 6066:6066
+      - 7077:7077
+      - 8080:8080
+    expose:
+      - "8081-8095"
+    volumes:
+      - ./conf/master:/conf
+      - ./data:/tmp/data
+
+  spark_worker:
+    build: ./spark/worker
+    container_name: spark_worker
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark_master:7077
+    hostname: spark_worker
+    environment:
+      SPARK_CONF_DIR: /conf
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 1g
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8081
+      constraint: role!=master
+    links:
+      - spark_master
+    expose:
+      - "8081-8095"
+    ports:
+      - 8081:8081
+    volumes:
+      - ./conf/worker:/conf
+      - ./data:/tmp/data
+# networks:
+#   default:
+#     driver: overlay

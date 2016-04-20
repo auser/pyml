@@ -10,6 +10,8 @@ backup:
 restore:
 	docker run --volumes-from pydock_core_1 -v $(CURDIR):/backup ubuntu bash -c "cd /home/compute/notebooks && tar xfz /backup/backup.tar.gz"
 
+script:
+	go build -o scripts/boot scripts/boot.go
 
 clean:
 	docker-cleanup
