@@ -1,3 +1,20 @@
+OWNER=auser
+
+ALL_MACHINES:=opencv
+ALL_IMGAES:=$(ALL_MACHINES)
+
+build/%: DARGS?=
+
+build/%:
+	echo "$: $@"
+	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest ./machines/$(notdir $@)
+
+dev/%: ARGS?=
+dev/%: DARGS?=
+dev/%: PORT?=8888
+dev/%:
+	docker run -it --rm -p $(PORT):8888 $(DARGS) $(OWNER)/$(notdir $@) $(ARGS)
+
 up:
 	docker-compose -p pydock up -d
 
