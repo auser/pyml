@@ -1,12 +1,28 @@
 OWNER=auser
 
-ALL_MACHINES:=opencv
-ALL_IMGAES:=$(ALL_MACHINES)
+.PHONY: build-all help environment-check release-all
+
+ALL_STACKS:=python23 \
+	spark \
+	opencv \
+	tensorflow \
+	torch \
+	notebook
+
+ALL_IMAGES:=$(ALL_STACKS)
+
+MACHINES_DIR := machines
 
 build/%: DARGS?=
 
+MACHINE_PATH := $(subst build/,,,$@)
+
+GIT_MASTER_HEAD_SHA:=$(shell git rev-parse --short=12 --verify HEAD)
+
+
+build-all: $(patsubst %,build/%, $(ALL_IMAGES))
+
 build/%:
-	echo "$: $@"
 	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest ./machines/$(notdir $@)
 
 dev/%: ARGS?=
@@ -14,6 +30,12 @@ dev/%: DARGS?=
 dev/%: PORT?=8888
 dev/%:
 	docker run -it --rm -p $(PORT):8888 $(DARGS) $(OWNER)/$(notdir $@) $(ARGS)
+
+push/%:
+	docker push $(OWNER)/$(notdir $@):latest
+	docker push $(OWNER)/$(notdir $@):$(GIT_MASTER_HEAD_SHA)
+
+push-all: $(patsubst %,push/%, $(ALL_IMAGES))
 
 up:
 	docker-compose -p pydock up -d

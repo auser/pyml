@@ -79,7 +79,7 @@ if [[ $PROVIDER == "virtualbox" ]]; then
                   --virtualbox-memory $MEMORY \
                   --virtualbox-cpu-count $CPU_COUNT"
 
-  verbose "${NORM}Running ${REV}${BOLD}virtualbox${NORM}"
+  e_debug e_header "${NORM}Running ${REV}${BOLD}virtualbox${NORM}"
 
 elif [[ $PROVIDER == "aws" ]]; then
   if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$AWS_VPC_ID" ]; then
@@ -105,7 +105,7 @@ fi
 
 e_debug e_header "Creating multihost keystore"
 getName keystoreName "keystore"
-createMachine $keystoreName "$DRIVER_OPTIONS --amazonec2-instance-type=t2.nano"
+createMachine $keystoreName "$DRIVER_OPTIONS"
 dmi $keystoreName
 
 e_debug e_header "Launching consul on $keystoreName"
@@ -121,12 +121,10 @@ getName swarmMasterName "swarm-master"
 launchSwarmMaster swarmMasterId \
                   $swarmMasterName \
                   $keystoreIp \
-                  "$DRIVER_OPTIONS \
-                    --amazonec2-instance-type=t2.nano"
+                  "$DRIVER_OPTIONS"
 
 dmIp swarmMasterIP $swarmMasterName
 dmi $swarmMasterName
-echo "keystoreIp: $keystoreIp"
 launchRegistrator _masterRegistrator $keystoreIp
 
 # e_debug e_header "Creating network"
@@ -142,14 +140,16 @@ do
   launchSwarmNode swarmNodeName \
                     $swarmNodeName \
                     $keystoreIp \
-                    "$DRIVER_OPTIONS \
-                      --amazonec2-instance-type=g2.2xlarge"
+                    "$DRIVER_OPTIONS"
 
   dmIp swarmNodeIP $swarmNodeName
   dmi $swarmNodeName
   launchRegistrator _nodeRegistrator $keystoreIp
   e_debug e_success "Launched swarm node $I at $swarmNodeIP"
 done
+
+dmi $swarmMasterName
+docker network create --driver overlay $NET_NAME
 
 exit 0
 #
