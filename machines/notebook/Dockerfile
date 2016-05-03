@@ -275,20 +275,29 @@ ENV USER_GID compute-users
 RUN addgroup $USER_GID
 ENV PYTHONPATH "$SPARK_HOME/python:${PYTHONPATH}"
 
-# RUN mkdir -p /opt/compute-container
-# ADD entry.sh /opt/compute-container/entry.sh
-# RUN chmod u+x /opt/compute-container/entry.sh
-# RUN chown -R jovyan /opt/compute-container/
-#
+RUN mkdir -p /opt/compute-container
+ADD entry.sh /opt/compute-container/entry.sh
+RUN chmod u+x /opt/compute-container/entry.sh
+RUN chown -R $NB_USER /opt/compute-container/
+
 # # USER jovyan
 # CMD /opt/compute-container/entry.sh
 
+## CLEAN UP
+RUN AUTO_ADDED_PACKAGES=`apt-mark showauto`
+RUN apt-get remove --purge -y $BUILD_PACKAGES $AUTO_ADDED_PACKAGES
+RUN rm -rf /tmp/* /var/tmp/*
+
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+## CLEAN UP
 
 # Configure container startup as root
 EXPOSE 8888
 WORKDIR /home/$NB_USER/work
 ENTRYPOINT ["tini", "--"]
-CMD ["/usr/local/bin/start-notebook.sh"]
+# CMD ["/usr/local/bin/start-notebook.sh"]
+CMD ["/opt/compute-container/entry.sh"]
 
 # Add local files as late as possible to avoid cache busting
 # Start notebook server
@@ -299,4 +308,4 @@ CMD ["/usr/local/bin/start-notebook.sh"]
 RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
 
 # Switch back to jovyan to avoid accidental container runs as root
-USER jovyan
+# USER jovyan

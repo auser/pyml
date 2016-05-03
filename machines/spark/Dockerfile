@@ -65,4 +65,13 @@ RUN cd "$SPARK_HOME" && \
     # build/sbt -Pyarn -Phadoop-2.3 assembly
     # ${SBT_HOME}/bin/sbt assembly
 
+## CLEAN UP
+RUN apt-get remove --purge -yq $(apt-mark showauto)
+RUN rm -rf /tmp/* /var/tmp/*
+
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+## CLEAN UP
+
+
 USER jovyan

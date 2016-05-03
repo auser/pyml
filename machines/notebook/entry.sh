@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 USER_UID=${USER_UID:-2000}
-USER_LOGIN=${USER:-compute}
+USER_LOGIN=${USER:-jovyan}
 USER_FULL_NAME="${USER_FULL_NAME:-Compute container user}"
 USER_DIR=${HOME:-"/home/${USER_LOGIN}"}
 PASSWORD=${PASSWORD:-itsginger}

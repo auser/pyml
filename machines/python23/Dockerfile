@@ -85,4 +85,13 @@ RUN $CONDA_DIR/envs/python2/bin/python -m ipykernel install
 
 RUN rm /tmp/requirements.txt
 
+## CLEAN UP
+RUN apt-get remove --purge -yq $(apt-mark showauto)
+RUN rm -rf /tmp/* /var/tmp/*
+
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+## CLEAN UP
+
+
 USER jovyan
