@@ -1,46 +1,59 @@
-# FROM jupyter/minimal-notebook
-FROM auser/cuda
+#!/bin/bash
 
-USER root
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+CONDA_DIR=${CONDA_DIR:-/opt/conda}
 
-ENV CONDA_DIR /opt/conda
-# Configure environment
-ENV D_USER compute
-ENV D_UID 1000
+rm /bin/sh && ln -s /bin/bash /bin/sh
 
-RUN useradd -m -s /bin/bash -N -u $D_UID $D_USER
 
 # libav-tools for matplotlib anim
-RUN apt-get update && \
+apt-get update && \
     apt-get install -y --no-install-recommends libav-tools \
     libhdf5-dev graphviz libhdf5-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
+apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
   libglib2.0-0 libxext6 libsm6 libxrender1 \
   git mercurial subversion
-RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
+echo 'export PATH=$CONDA_DIR/bin:$PATH' > /etc/profile.d/conda.sh && \
   wget --quiet https://repo.continuum.io/miniconda/Miniconda2-4.0.5-Linux-x86_64.sh && \
-  /bin/bash /Miniconda2-4.0.5-Linux-x86_64.sh -b -p /opt/conda && \
+  /bin/bash /Miniconda2-4.0.5-Linux-x86_64.sh -b -p $CONDA_DIR && \
   rm Miniconda2-4.0.5-Linux-x86_64.sh
 
-RUN apt-get install -y curl grep sed dpkg && \
+apt-get install -y curl grep sed dpkg && \
   TINI_VERSION=`curl https://github.com/krallin/tini/releases/latest | grep -o "/v.*\"" | sed 's:^..\(.*\).$:\1:'` && \
   curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb && \
   dpkg -i tini.deb && \
   rm tini.deb && \
   apt-get clean
 
-ENV PATH /opt/conda/bin:$PATH
+function setup_jupyter() {
+	_python=$1
+	_name=$2
 
-ENTRYPOINT [ "/usr/bin/tini", "--" ]
+	_ktmp=$(mktemp -d kernelspecs-XXXXXXX)
+	echo "Setting up Jupyter for ${_python}"
+	_spec_dir="${_ktmp}/$(basename ${_python})"
+	mkdir -p "${_spec_dir}"
+	cat >"${_spec_dir}/kernel.json" <<EOI
+{
+	"language": "python",
+	"display_name": "${_name}",
+	"argv": [
+		"${_python}", "-m", "ipykernel", "-f", "{connection_file}"
+	]
+}
+EOI
+	jupyter kernelspec install "${_spec_dir}"
+	rm -r "${_ktmp}"
+}
+
+export PATH=$CONDA_DIR/bin:$PATH
 
 # Install Python 3 packages
-RUN /opt/conda/bin/conda install python=3.4
-RUN /opt/conda/bin/conda update --all python=3.4
-RUN /opt/conda/bin/conda install --quiet --yes \
+$CONDA_DIR/bin/conda install python=3.4
+$CONDA_DIR/bin/conda update --all python=3.4
+$CONDA_DIR/bin/conda install --quiet --yes \
     'ipywidgets=4.1*' \
     'pandas=0.17*' \
     'numexpr=2.5*' \
@@ -58,10 +71,10 @@ RUN /opt/conda/bin/conda install --quiet --yes \
     'numba=0.23*' \
     'bokeh=0.11*' \
     'h5py=2.5*' \
-    && /opt/conda/bin/conda clean -tipsy
+    && $CONDA_DIR/bin/conda clean -tipsy
 
 # Install bleeding-edge Theano
-# RUN source activate root && \
+# source activate root && \
 #     pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git && \
 #     # [ Lasagne ]
 #     pip install --upgrade https://github.com/Lasagne/Lasagne/archive/master.zip && \
@@ -69,14 +82,15 @@ RUN /opt/conda/bin/conda install --quiet --yes \
 #     mkdir -p /tmp && cd /tmp && \
 #     git clone https://github.com/fchollet/keras.git
 #
-# RUN cd /tmp/keras && \
+# cd /tmp/keras && \
 #   source activate root && python setup.py install
 
-# RUN cd /usr/local/src/keras && \
+# cd /usr/local/src/keras && \
     # source activate python2 && python setup.py install
 
 # Install Python 2 packages
-RUN /opt/conda/bin/conda create --quiet --yes -p $CONDA_DIR/envs/python2 python=2.7 \
+$CONDA_DIR/bin/conda create --quiet --yes \
+    -p $CONDA_DIR/envs/python2 python=2.7 \
     'ipython=4.1*' \
     'ipywidgets=4.1*' \
     'pandas=0.17*' \
@@ -96,28 +110,21 @@ RUN /opt/conda/bin/conda create --quiet --yes -p $CONDA_DIR/envs/python2 python=
     'bokeh=0.11*' \
     'h5py=2.5*' \
     'pyzmq' \
-    && /opt/conda/bin/conda clean -tipsy
-
-USER root
+    && $CONDA_DIR/bin/conda clean -tipsy
 
 # Install Python 2 kernel spec globally to avoid permission problems when NB_UID
 # switching at runtime.
-RUN $CONDA_DIR/envs/python2/bin/python -m ipykernel install
+$CONDA_DIR/envs/python2/bin/python -m ipykernel install
 
-ADD requirements.txt /tmp/requirements.txt
-RUN $CONDA_DIR/envs/python2/bin/pip install \
+echo "Configuring Jupyter notebook server for Python 2 and 3..."
+setup_jupyter $CONDA_DIR/envs/python2/bin/python "Python 2"
+setup_jupyter $CONDA_DIR/bin/python "Python 3"
+
+
+$CONDA_DIR/envs/python2/bin/pip install \
       --no-cache-dir --upgrade \
       -r /tmp/requirements.txt
-RUN /opt/conda/bin/pip install \
+$CONDA_DIR/bin/pip install \
       --no-cache-dir --upgrade \
       -r /tmp/requirements.txt
-RUN rm /tmp/requirements.txt
-
-## CLEAN UP
-RUN apt-get clean autoclean -yq && \
-    apt-get autoremove -yq && \
-    rm -rf /tmp/* /var/tmp/* \
-    rm -rf /var/lib/apt/lists/*
-## CLEAN UP
-
-USER compute
+rm /tmp/requirements.txt

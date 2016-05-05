@@ -1,0 +1,42 @@
+{
+  "builders": [{
+    "name": "{{user `vm_name`}}-{{user `version`}}",
+    "type": "docker",
+    "run_command": [
+        "-ti",
+        "-v",
+        "{{ user `home` }}:/tmp/packer-files",
+        "-d",
+        "{{.Image}}",
+        "/bin/bash",
+        "--noprofile",
+        "--norc"
+      ],
+    "pull": true,
+    "image": "ubuntu",
+    "export_path": "image.tar"
+  }],
+  "provisioners": [
+    {
+      "type": "shell-local",
+      "command": "docker-machine ssh {{ user `machine_name` }} sudo mkdir -p $(pwd) && docker-machine ssh {{ user `machine_name` }} sudo chown ubuntu $(pwd) && docker-machine scp -r $(pwd)/ {{ user `machine_name` }}:$(pwd)"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "mkdir -p /tmp/setup"
+      ]
+    }
+  ],
+  "variables": {
+    "machine_name": "aws01",
+    "vm_name": "pyml",
+    "hostname": "pyml",
+    "ssh_fullname": "pyml",
+    "ssh_password": "pyml",
+    "ssh_username": "pyml",
+    "update": "true",
+    "home": "{{env `HOME`}}",
+    "version": "1.4.0"
+  }
+}

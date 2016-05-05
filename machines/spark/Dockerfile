@@ -1,5 +1,6 @@
 # FROM gettyimages/spark
 # FROM wielandbrendel/ldap-xserver:cuda7.0-cudnn3
+# FROM bethgelab/jupyter-deeplearning:cuda7.5-cudnn4
 FROM auser/python23
 
 USER root
@@ -18,10 +19,18 @@ ENV PATH ${PATH}:${SBT_HOME}/bin
 
 ## Java
 RUN apt-get update -yq
-RUN apt-get install -yq python-software-properties software-properties-common python3-software-properties curl
-RUN echo deb http://http.debian.net/debian jessie-backports main >> /etc/apt/sources.list
-RUN apt-get update -yq
-RUN apt-get install -yq openjdk-8-jdk ant
+RUN apt-get install -yq curl python-software-properties software-properties-common
+# RUN echo deb http://http.debian.net/debian jessie-backports main >> /etc/apt/sources.list
+# Install Java.
+RUN \
+  echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
+  add-apt-repository -y ppa:webupd8team/java && \
+  apt-get update && \
+  apt-get install -y oracle-java8-installer && \
+  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /var/cache/oracle-jdk8-installer
+
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 # Scala
 # RUN wget http://www.scala-lang.org/files/archive/scala-2.11.8.deb
@@ -62,16 +71,15 @@ ENV MAVEN_OPTS="-Xmx2g -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=512m"
 
 RUN cd "$SPARK_HOME" && \
     build/mvn -Pyarn -Phadoop-2.4 -Dhadoop.version=2.4.0 -DskipTests clean package
-    # build/sbt -Pyarn -Phadoop-2.3 assembly
-    # ${SBT_HOME}/bin/sbt assembly
 
 ## CLEAN UP
-RUN apt-get remove --purge -yq $(apt-mark showauto)
+RUN apt-get clean autoclean -yq && \
+    apt-get autoremove -yq
+
 RUN rm -rf /tmp/* /var/tmp/*
 
-RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 ## CLEAN UP
 
 
-USER jovyan
+USER compute

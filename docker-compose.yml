@@ -1,14 +1,33 @@
 version: "2"
 
 services:
+  ## Base layers
+  python23:
+    build: ./machines/python23
+    command: /bin/true
+  opencv:
+    build: ./machines/opencv
+    command: /bin/true
+  tensorflow:
+    build: ./machines/tensorflow
+    command: /bin/true
+  cuda:
+    build: ./machines/cuda
+    command: /bin/true
+  spark:
+    build: ./machines/spark
+    command: /bin/true
+
   notebook:
     build: ./machines/notebook
     ports:
       - 8888:8888
-    networks:
-      - cluster-net
     links:
       - spark_master
+      - opencv
+      - python23
+      - tensorflow
+      - cuda
     volumes_from:
       - notebook_data
 
@@ -23,8 +42,6 @@ services:
     container_name: spark_master
     command: bin/spark-class org.apache.spark.deploy.master.Master -h master
     hostname: spark_master
-    networks:
-      - cluster-net
     environment:
       - "constraint:node==spark_master"
       - "SPARK_CONF_DIR: /conf"
@@ -42,6 +59,8 @@ services:
       - 6066:6066
       - 7077:7077
       - 8080:8080
+    links:
+      - spark
     volumes:
       - ./conf/master:/conf
       - ./data:/usr/local/spark/data
@@ -51,8 +70,6 @@ services:
     container_name: spark_worker
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark_master:7077
     hostname: spark_worker
-    networks:
-      - cluster-net
     environment:
       - "constraint:node==spark_worker"
       - "SPARK_CONF_DIR: /conf"
@@ -71,6 +88,6 @@ services:
       - ./conf/worker:/conf
       - ./data:/usr/local/spark/data
 
-networks:
-  cluster-net:
-    driver: overlay
+# networks:
+#   cluster-net:
+#     driver: overlay

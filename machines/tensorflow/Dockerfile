@@ -34,4 +34,4 @@ RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 ## CLEAN UP
 
-USER jovyan
+USER compute

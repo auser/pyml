@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 USER_UID=${USER_UID:-2000}
-USER_LOGIN=${USER:-jovyan}
+USER_LOGIN=${USER:-compute}
 USER_FULL_NAME="${USER_FULL_NAME:-Compute container user}"
 USER_DIR=${HOME:-"/home/${USER_LOGIN}"}
 PASSWORD=${PASSWORD:-itsginger}
@@ -12,7 +12,6 @@ NOTEBOOK_DIR="${USER_DIR}/notebooks"
 PASSWORD_FILE=${JDIR}/.pass
 
 ##### Working stuff
-
 mkdir -p -m 700 ${USER_DIR}
 mkdir -p -m 700 ${JDIR}/security
 mkdir -p -m 700 ${NOTEBOOK_DIR}
@@ -22,9 +21,9 @@ id -u $USER_LOGIN &>/dev/null || adduser --disabled-password \
         --home "${USER_DIR}" \
         --uid "${USER_UID}" \
         --gecos "${USER_FULL_NAME},,," "${USER_LOGIN}" >/dev/null
-adduser "${USER_LOGIN}" compute-users
+# adduser "${USER_LOGIN}" compute-users
 
-chown -R $USER_LOGIN:compute-users $USER_DIR
+chown -R $USER_LOGIN $USER_DIR
 
 # IPY_DIR=$(ipython locate)
 # USER_IPY_DIR=$(su -c "ipython locate" $USER_LOGIN)

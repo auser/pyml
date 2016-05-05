@@ -1,20 +1,21 @@
+#!/bin/bash
+
 # FROM auser/python23
-FROM auser/spark
+# FROM auser/spark
 
-ENV OPENCV_VERSION 3.1.0
-ENV LD_LIBRARY_PATH /usr/local/lib
-ENV OPENCV_ROOT /usr/local/src
-ENV OPENCV_HOME $OPENCV_ROOT/opencv
+OPENCV_VERSION=${OPENCV_VERSION:-3.1.0}
+OPENCV_ROOT=${OPENCV_ROOT:-/usr/local/src}
+OPENCV_HOME=${OPENCV_HOME:-$OPENCV_ROOT/opencv}
 
-USER root
+LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-RUN apt-get update -yq
-RUN apt-get -yq dist-upgrade
+apt-get update -yq
+apt-get -yq dist-upgrade
 
 # Install opencv prerequisites...
 # [ Base ]
 # Install git, bc and dependencies
-RUN apt-get install -yq \
+apt-get install -yq \
   git \
   bc \
   cmake \
@@ -44,20 +45,20 @@ RUN apt-get install -yq \
   g++
 
 # Install boost
-RUN apt-get install -y --no-install-recommends libboost-all-dev
+apt-get install -y --no-install-recommends libboost-all-dev
 
-RUN apt-get remove -yq python python-dev
+apt-get remove -yq python python-dev
 
 # Install build-essential, git, python-dev, pip and other dependencies
-RUN apt-get install -y libopenblas-dev
+apt-get install -y libopenblas-dev
 
 # [ OpenCV ]
 
 # GUI:
-RUN apt-get install -yq qt5-default
+apt-get install -yq qt5-default
 
 # Media I/O:
-RUN apt-get install -yq zlib1g-dev \
+apt-get install -yq zlib1g-dev \
             libjpeg-dev \
             libwebp-dev \
             libpng-dev \
@@ -67,7 +68,7 @@ RUN apt-get install -yq zlib1g-dev \
             libgdal-dev
 
 # Video I/O:
-RUN apt-get install -yq libdc1394-22-dev \
+apt-get install -yq libdc1394-22-dev \
             libavcodec-dev libavformat-dev \
             libswscale-dev \
             libtheora-dev \
@@ -79,7 +80,7 @@ RUN apt-get install -yq libdc1394-22-dev \
             libxine2-dev
 
 # Parallelism and linear algebra libraries:
-RUN apt-get install -yq \
+apt-get install -yq \
     libtool \
     v4l-utils \
     libtbb-dev \
@@ -90,26 +91,23 @@ RUN apt-get install -yq \
     libeigen3-dev \
     libtesseract-dev
 
-RUN apt-get install -yq \
+apt-get install -yq \
     unzip \
     g++
 
-RUN apt-get clean -yq
+apt-get clean -yq
 
-ENV CUDA_LIB_PATH=/usr/local/cuda/lib64/stubs/
+export CUDA_LIB_PATH=/usr/local/cuda/lib64/stubs/
 
-RUN conda env list
-ENV CONDA_DIR /opt/conda
-RUN echo "CONDA DIR =>" $CONDA_DIR/envs
-RUN cp $CONDA_DIR/envs/python2/include/*.h $CONDA_DIR/envs/python2/include/python2.7
-RUN cp $CONDA_DIR/include/*.h $CONDA_DIR/include/python3.4m/
+cp $CONDA_DIR/envs/python2/include/*.h $CONDA_DIR/envs/python2/include/python2.7
+cp $CONDA_DIR/include/*.h $CONDA_DIR/include/python3.4m/
 
 # Build OpenCV 3.x
 # =================================
 # WORKDIR /usr/local/src
-WORKDIR $OPENCV_ROOT
+cd $OPENCV_ROOT
 
-RUN mkdir -p $OPENCV_ROOT && \
+mkdir -p $OPENCV_ROOT && \
     cd $OPENCV_ROOT && \
     git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv.git && \
     git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv_contrib.git && \
@@ -118,19 +116,12 @@ RUN mkdir -p $OPENCV_ROOT && \
     cmake -D CMAKE_BUILD_TYPE=Release \
           -D CMAKE_INSTALL_PREFIX=/usr/local \
           -D WITH_TBB=ON \
-          # -D BUILD_PYTHON_SUPPORT=ON \
           -D WITH_V4L=ON \
-#          -D INSTALL_C_EXAMPLES=ON \     bug w/ tag=3.1.0: cmake has error
           -D INSTALL_C_EXAMPLES=OFF \
           -D INSTALL_PYTHON_EXAMPLES=OFF \
           -D BUILD_EXAMPLES=OFF \
           -D BUILD_DOCS=OFF \
           -D OPENCV_EXTRA_MODULES_PATH=$OPENCV_ROOT/opencv_contrib/modules \
-          # -D WITH_XIMEA=YES \
-#          -D WITH_QT=YES \
-          # -D WITH_FFMPEG=YES \
-          # -D WITH_PVAPI=YES \
-          # -D WITH_GSTREAMER=YES \
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
           -D PYTHON2_EXECUTABLE=$CONDA_DIR/envs/python2/bin/python \
@@ -151,32 +142,18 @@ RUN mkdir -p $OPENCV_ROOT && \
       ldconfig && \
       rm -rf $OPENCV_ROOT
 
-RUN sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
-RUN ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/python3/dist-packages/
-RUN ln -sf /usr/local/src/opencv/release/lib/python3/cv2.* /usr/lib/python3/dist-packages/
+sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
+ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/python3/dist-packages/
+ln -sf /usr/local/src/opencv/release/lib/python3/cv2.* /usr/lib/python3/dist-packages/
 #
 ## Additional python modules
-RUN $CONDA_DIR/envs/python2/bin/pip install imutils
-RUN $CONDA_DIR/bin/pip install imutils
+$CONDA_DIR/envs/python2/bin/pip install imutils
+$CONDA_DIR/bin/pip install imutils
 
-# RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
+# DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
 #     libboost-dev \
 #     libboost-python-dev
 #
-# RUN pip install dlib
+# pip install dlib
 
 ## =================================
-
-## CLEAN UP
-RUN apt-get clean autoclean -yq && \
-    apt-get autoremove -yq && \
-    rm -rf /tmp/* /var/tmp/* && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf $OPENCV_ROOT/opencv && \
-    rm -rf $OPENCV_ROOT/opencv_contrib
-## CLEAN UP
-
-## Switch back to jupyter user (for now)
-USER compute
-
-WORKDIR /data

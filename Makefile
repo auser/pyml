@@ -2,12 +2,15 @@ OWNER=auser
 
 .PHONY: build-all help environment-check release-all
 
-ALL_STACKS:=python23 \
+ALL_STACKS:=cuda \
+	python23 \
 	spark \
 	opencv \
 	tensorflow \
 	torch \
 	notebook
+	# tensorflow \
+	# torch \
 
 ALL_IMAGES:=$(ALL_STACKS)
 
@@ -36,6 +39,13 @@ push/%:
 	docker push $(OWNER)/$(notdir $@):$(GIT_MASTER_HEAD_SHA)
 
 push-all: $(patsubst %,push/%, $(ALL_IMAGES))
+
+tag/%:
+# always tag the latest build with the git sha
+	docker tag -f $(OWNER)/$(notdir $@):latest $(OWNER)/$(notdir $@):$(GIT_MASTER_HEAD_SHA)
+
+tag-all: $(patsubst %,tag/%, $(ALL_IMAGES))
+
 
 up:
 	docker-compose -p pydock up -d

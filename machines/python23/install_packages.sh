@@ -11,6 +11,7 @@ apt-get clean -y
 
 rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+ls -l /opt/conda/envs
 for PYTHONVER in 2 3 ; do
   PYTHON="python$PYTHONVER"
   PIP="pip$PYTHONVER"
@@ -27,6 +28,8 @@ for PYTHONVER in 2 3 ; do
   $PIP install --no-cache-dir statsmodels
   $PIP install --no-cache-dir git+https://github.com/Theano/Theano.git
   $PIP install --no-cache-dir git+https://github.com/Lasagne/Lasagne.git
+  $PIP install --no-cache-dir git+https://github.com/fchollet/keras.git
+  $PIP install --no-cache-dir https://github.com/Lasagne/Lasagne/archive/master.zip
   $PIP install --no-cache-dir bokeh
   $PIP install --no-cache-dir mock
   $PIP install --no-cache-dir pytest
