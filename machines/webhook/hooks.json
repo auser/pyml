@@ -1,0 +1,26 @@
+[
+  {
+    "id": "webhook",
+    "execute-command": "/data/rebuild.sh",
+    "command-working-directory": "/data",
+    "pass-arguments-to-command":
+    [
+      {
+        "source": "payload",
+        "name": "repository.clone_url"
+      },
+      {
+        "source": "payload",
+        "name": "head_commit.id"
+      },
+      {
+        "source": "payload",
+        "name": "repository.name"
+      },
+      {
+        "source": "payload",
+        "name": "pusher.email"
+      }
+    ]
+  }
+]
