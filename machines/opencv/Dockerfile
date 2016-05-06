@@ -168,13 +168,24 @@ RUN mkdir -p $OPENCV_ROOT && \
           .. && \
       make -j8
 
-RUN make install && \
+USER root
+RUN cd $OPENCV_HOME/build && \
+      mkdir -p /usr/local/share/OpenCV/ && \
+      chown -R compute /usr/local/share/OpenCV/ && \
+      make install && \
       ldconfig && \
       rm -rf $OPENCV_ROOT
 
 RUN sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
-RUN ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/py3/dist-packages/
-RUN ln -sf /usr/local/src/opencv/release/lib/py3/cv2.* /usr/lib/py3/dist-packages/
+
+USER compute
+RUN conda info --json
+RUN source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && \
+    source activate py3 && export PY3_CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && \
+    echo "PY3_CONDA_DIR: $PY3_CONDA_DIR" && \
+    ls -l $PY3_CONDA_DIR && \
+    ln -sf /usr/local/src/opencv/release/lib/cv2.* $PY3_CONDA_DIR && \
+    ln -sf /usr/local/src/opencv/release/lib/py3/cv2.* $PY3_CONDA_DIR
 #
 
 USER compute
