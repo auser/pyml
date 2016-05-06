@@ -117,13 +117,12 @@ RUN source activate py3 && \
       --no-cache-dir --upgrade --user \
       -r /tmp/requirements.txt
 
-# USER root
+USER root
 RUN rm /tmp/requirements.txt
-# USER compute
+USER compute
 
 # ## CLEAN UP
-# RUN apt-get clean autoclean -yq && \
-#     apt-get autoremove -yq && \
+RUN apt-get clean autoclean -yq && apt-get autoremove -yq
 #     rm -rf /tmp/* /var/tmp/* \
 #     rm -rf /var/lib/apt/lists/*
 # ## CLEAN UP
