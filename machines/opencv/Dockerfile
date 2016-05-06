@@ -92,7 +92,8 @@ RUN apt-get install -yq \
 
 RUN apt-get install -yq \
     unzip \
-    g++
+    g++ \
+    jq
 
 RUN apt-get clean -yq
 
@@ -100,10 +101,26 @@ ENV CUDA_LIB_PATH=/usr/local/cuda/lib64/stubs/
 
 USER compute
 RUN conda env list
-ENV CONDA_DIR /opt/conda
-RUN echo "CONDA DIR =>" $CONDA_DIR/envs
-RUN cp $CONDA_DIR/envs/py2/include/*.h $CONDA_DIR/envs/py2/include/python2.7
-RUN cp $CONDA_DIR/include/*.h $CONDA_DIR/include/py3.4m/
+
+RUN source activate py2 && \
+    CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
+    echo $CONDA_DIR && \
+    cp $CONDA_DIR/include/*.h $CONDA_DIR/include/python2.7
+
+RUN source activate py3 && \
+    CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
+    echo $CONDA_DIR && \
+    cp $CONDA_DIR/include/*.h $CONDA_DIR/include/python3.4m
+
+# RUN source activate py3 && \
+#     PY3_CONDA_DIR=$(conda info --json | jq -r .default_prefix) \
+#     ls -l "$PY3_CONDA_DIR"
+#
+# RUN echo "CONDA DIR =>" $PY2_CONDA_DIR
+# RUN echo "CONDA DIR =>" $PY3_CONDA_DIR
+#
+# RUN cp $CONDA_DIR/envs/py2/include/*.h $CONDA_DIR/envs/py2/include/python2.7
+# RUN cp $CONDA_DIR/include/*.h $CONDA_DIR/include/py3.4m/
 
 # Build OpenCV 3.x
 # =================================
