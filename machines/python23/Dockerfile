@@ -59,7 +59,6 @@ RUN source activate py3 && \
     'numba=0.23*' \
     'bokeh=0.11*' \
     'h5py=2.5*' \
-    'conda-build=*' \
     && /opt/conda/bin/conda clean -tipsy
 
 # Install bleeding-edge Theano
@@ -100,7 +99,6 @@ RUN source activate py2 && \
     'bokeh=0.11*' \
     'h5py=2.5*' \
     'pyzmq' \
-    'conda-build=*' \
     && $CONDA_DIR/bin/conda clean -tipsy
 
 USER root
