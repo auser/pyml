@@ -98,11 +98,12 @@ RUN apt-get clean -yq
 
 ENV CUDA_LIB_PATH=/usr/local/cuda/lib64/stubs/
 
+USER compute
 RUN conda env list
 ENV CONDA_DIR /opt/conda
 RUN echo "CONDA DIR =>" $CONDA_DIR/envs
-RUN cp $CONDA_DIR/envs/python2/include/*.h $CONDA_DIR/envs/python2/include/python2.7
-RUN cp $CONDA_DIR/include/*.h $CONDA_DIR/include/python3.4m/
+RUN cp $CONDA_DIR/envs/py2/include/*.h $CONDA_DIR/envs/py2/include/python2.7
+RUN cp $CONDA_DIR/include/*.h $CONDA_DIR/include/py3.4m/
 
 # Build OpenCV 3.x
 # =================================
@@ -133,18 +134,18 @@ RUN mkdir -p $OPENCV_ROOT && \
           # -D WITH_GSTREAMER=YES \
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
-          -D PYTHON2_EXECUTABLE=$CONDA_DIR/envs/python2/bin/python \
-          -D PYTHON2_INCLUDE_DIR=$CONDA_DIR/envs/python2/include/python2.7 \
-          -D PYTHON2_LIBRARIES=$CONDA_DIR/envs/python2/lib/libpython2.7.so \
-          -D PYTHON2_PACKAGES_PATH=$CONDA_DIR/envs/python2/lib/python2.7/site-packages \
-          -D PYTHON2_NUMPY_INCLUDE_DIRS=$CONDA_DIR/envs/python2/lib/python2.7/site-packages/numpy/core/include/ \
-          -D BUILD_opencv_python3=ON \
+          -D PYTHON2_EXECUTABLE=$CONDA_DIR/envs/py2/bin/python \
+          -D PYTHON2_INCLUDE_DIR=$CONDA_DIR/envs/py2/include/python2.7 \
+          -D PYTHON2_LIBRARIES=$CONDA_DIR/envs/py2/lib/libpython2.7.so \
+          -D PYTHON2_PACKAGES_PATH=$CONDA_DIR/envs/py2/lib/python2.7/site-packages \
+          -D PYTHON2_NUMPY_INCLUDE_DIRS=$CONDA_DIR/envs/py2/lib/python2.7/site-packages/numpy/core/include/ \
+          -D BUILD_opencv_py3=ON \
           -D PYTHON3_EXECUTABLE=$CONDA_DIR/bin/python \
-          -D PYTHON3_INCLUDE_DIR=$CONDA_DIR/include/python3.4m/ \
-          -D PYTHON3_LIBRARY=$CONDA_DIR/lib/libpython3.so \
-          -D PYTHON_LIBRARY=$CONDA_DIR/lib/libpython3.so \
-          -D PYTHON3_PACKAGES_PATH=$CONDA_DIR/lib/python3.4/site-packages \
-          -D PYTHON3_NUMPY_INCLUDE_DIRS=$CONDA_DIR/lib/python3.4/site-packages/numpy/core/include/ \
+          -D PYTHON3_INCLUDE_DIR=$CONDA_DIR/include/py3.4m/ \
+          -D PYTHON3_LIBRARY=$CONDA_DIR/lib/libpy3.so \
+          -D PYTHON_LIBRARY=$CONDA_DIR/lib/libpy3.so \
+          -D PYTHON3_PACKAGES_PATH=$CONDA_DIR/lib/py3.4/site-packages \
+          -D PYTHON3_NUMPY_INCLUDE_DIRS=$CONDA_DIR/lib/py3.4/site-packages/numpy/core/include/ \
           .. && \
       make -j2 && \
       make install && \
@@ -152,11 +153,11 @@ RUN mkdir -p $OPENCV_ROOT && \
       rm -rf $OPENCV_ROOT
 
 RUN sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
-RUN ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/python3/dist-packages/
-RUN ln -sf /usr/local/src/opencv/release/lib/python3/cv2.* /usr/lib/python3/dist-packages/
+RUN ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/py3/dist-packages/
+RUN ln -sf /usr/local/src/opencv/release/lib/py3/cv2.* /usr/lib/py3/dist-packages/
 #
 ## Additional python modules
-RUN $CONDA_DIR/envs/python2/bin/pip install imutils
+RUN $CONDA_DIR/envs/py2/bin/pip install imutils
 RUN $CONDA_DIR/bin/pip install imutils
 
 # RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \

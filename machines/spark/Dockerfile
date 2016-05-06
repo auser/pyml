@@ -7,6 +7,7 @@ USER root
 
 ENV SPARK_VERSION "1.6.1"
 ENV SPARK_HOME "/usr/local/spark"
+ENV SPARK_INSTALL_DIR "/usr/local/src"
 
 ENV SCALA_VERSION 2.11.7
 ENV SBT_VERSION 0.13.11
@@ -36,36 +37,42 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 # RUN wget http://www.scala-lang.org/files/archive/scala-2.11.8.deb
 # RUN dpkg -i scala-2.11.8.deb
 
+RUN chown compute $SPARK_INSTALL_DIR
+RUN chown compute $(dirname $SPARK_HOME)
+USER compute
+WORKDIR $SPARK_INSTALL_DIR
 # Install Scala
 ## Piping curl directly in tar
 RUN \
-  curl -fsL http://downloads.typesafe.com/scala/$SCALA_VERSION/scala-$SCALA_VERSION.tgz | tar xfz - -C /root/ && \
-  echo >> /root/.bashrc && \
-  echo 'export PATH=~/scala-$SCALA_VERSION/bin:$PATH' >> /root/.bashrc
+  curl -fsL http://downloads.typesafe.com/scala/$SCALA_VERSION/scala-$SCALA_VERSION.tgz | tar xfz - -C $SPARK_INSTALL_DIR/ && \
+  echo >> $HOME/.bashrc && \
+  echo 'export PATH=$SPARK_INSTALL_DIR/scala-$SCALA_VERSION/bin:$PATH' >> $HOME/.bashrc
 
 # Install sbt
-RUN curl -sL "http://dl.bintray.com/sbt/native-packages/sbt/$SBT_VERSION/sbt-$SBT_VERSION.tgz" | gunzip | tar -x -C /usr/local && \
-    echo -ne "- with sbt $SBT_VERSION\n" >> /root/.built
+RUN curl -sL "http://dl.bintray.com/sbt/native-packages/sbt/$SBT_VERSION/sbt-$SBT_VERSION.tgz" | gunzip | tar -x -C $SPARK_INSTALL_DIR && \
+    echo -ne "- with sbt $SBT_VERSION\n" >> $SPARK_INSTALL_DIR/.built
 
 # Install Python 3 packages
-RUN conda install --quiet --yes \
+RUN source activate py3 && \
+    conda install --quiet --yes \
     -c anaconda-cluster \
     py4j && \
     conda clean -tipsy
 
-RUN conda install --quiet --yes \
-    -p $CONDA_DIR/envs/python2 \
+RUN source activate py2 && \
+    conda install --quiet --yes \
     -c anaconda-cluster \
     py4j && \
     conda clean -tipsy
 
-## Py4J
-WORKDIR /usr/local
 # ## Spark
-RUN curl -sL -o "/usr/local/spark-$SPARK_VERSION.tgz" "http://d3kbcqa49mib13.cloudfront.net/spark-$SPARK_VERSION.tgz"
+RUN curl -sL -o "$SPARK_INSTALL_DIR/spark-$SPARK_VERSION.tgz" "http://d3kbcqa49mib13.cloudfront.net/spark-$SPARK_VERSION.tgz"
 
-RUN tar xvf "spark-$SPARK_VERSION.tgz" && \
-    mv "/usr/local/spark-$SPARK_VERSION" "$SPARK_HOME"
+RUN echo "yay: $SPARK_INSTALL_DIR" && pwd
+RUN cd $SPARK_INSTALL_DIR && \
+    pwd && \
+    tar xf "spark-$SPARK_VERSION.tgz" && \
+    mv "$SPARK_INSTALL_DIR//spark-$SPARK_VERSION" "$SPARK_HOME"
 
 ENV MAVEN_OPTS="-Xmx2g -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=512m"
 
@@ -73,13 +80,14 @@ RUN cd "$SPARK_HOME" && \
     build/mvn -Pyarn -Phadoop-2.4 -Dhadoop.version=2.4.0 -DskipTests clean package
 
 ## CLEAN UP
+USER root
 RUN apt-get clean autoclean -yq && \
     apt-get autoremove -yq
 
-RUN rm -rf /tmp/* /var/tmp/*
-
-RUN rm -rf /var/lib/apt/lists/*
-## CLEAN UP
+# RUN rm -rf /tmp/* /var/tmp/*
+#
+# RUN rm -rf /var/lib/apt/lists/*
+# ## CLEAN UP
 
 
 USER compute
