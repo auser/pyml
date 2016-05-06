@@ -28,7 +28,7 @@ RUN ldconfig /usr/local/cuda/lib64
 
 ## CLEAN UP
 RUN apt-get remove --purge -yq $(apt-mark showauto)
-RUN rm -rf /tmp/* /var/tmp/*
+# RUN rm -rf /tmp/* /var/tmp/*
 
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
