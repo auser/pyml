@@ -119,10 +119,9 @@ RUN source activate py3 && \
 
 USER root
 RUN rm /tmp/requirements.txt
-USER compute
-
 # ## CLEAN UP
 RUN apt-get clean autoclean -yq && apt-get autoremove -yq
+USER compute
 #     rm -rf /tmp/* /var/tmp/* \
 #     rm -rf /var/lib/apt/lists/*
 # ## CLEAN UP
