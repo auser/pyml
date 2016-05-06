@@ -40,6 +40,7 @@ USER $D_USER
 
 # Install Python 3 packages
 RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4
+RUN $CONDA_DIR/bin/conda create --quiet --yes -n py2 python=2.7
 
 RUN source activate py3 && \
   $CONDA_DIR/bin/conda install --yes \
@@ -78,7 +79,7 @@ RUN source activate py3 && \
     # source activate python2 && python setup.py install
 
 # Install Python 2 packages
-RUN $CONDA_DIR/bin/conda create --quiet --yes -n py2 python=2.7
+
 RUN source activate py2 && \
   $CONDA_DIR/bin/conda install --quiet --yes \
     'ipython=4.1*' \
