@@ -3,57 +3,25 @@
 # Initial setup script for compute machine
 
 # Log commands & exit on error
-set -e
+set -xe
 
 OPENCV_VER=3.1.0
 OPENCV_CONTRIB_VER="${OPENCV_VER}"
 OPENCV_INSTALL_PREFIX="/opt/opencv"
+PYTHON_PACKAGES="ipython jupyter"
+CONDA_DIR=/opt/conda
 
-NOTES_DIR=/usr/local/src/installed
-LOG_DIR=/usr/local/src/logs/
-LOG_FILE=/usr/local/src/install_log
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-THIS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+export PATH="/home/${USER_LOGIN}/.local/bin:$CONDA_DIR/bin:$PATH"
 
-mkdir -p $NOTES_DIR $LOG_DIR
+for _pip in "$CONDA_DIR/envs/python2/bin/pip" "$CONDA_DIR/bin/pip"; do
+	echo "Upgrading ${_pip}..."
+	${_pip} install --upgrade pip
 
-function run_script() {
-	SCRIPT_NAME=$1
-	SCRIPT_PATH=$2
-
-	local result=-1
-
-	if [[ ! -f $NOTES_DIR/$SCRIPT_NAME ]]; then
-		/bin/bash $SCRIPT_PATH > "$LOG_DIR/$SCRIPT_NAME"
-
-		result=$?
-		if [[ $result -eq 0 ]]; then
-			echo "SUCCESS"
-			return 0
-		else
-			return $result
-		fi
-	fi
-}
-
-function install_pip_packages() {
-	PYTHON_PACKAGES=$1
-
-	for _pip in pip2 pip3; do
-		echo "Upgrading ${_pip}..."
-		${_pip} install --upgrade pip
-
-		echo "Installing remaining requirements via ${_pip}..."
-		for _pkg in ${PYTHON_PACKAGES}; do
-			${_pip} install --upgrade "${_pkg}"
-		done
+	echo "Installing remaining requirements via ${_pip}..."
+	for _pkg in ${PYTHON_PACKAGES}; do
+		${_pip} install --upgrade "${_pkg}"
 	done
-}
+done
 
 function setup_jupyter() {
 	_python=$1
@@ -72,98 +40,59 @@ function setup_jupyter() {
 	]
 }
 EOI
+echo $PATH
 	jupyter kernelspec install "${_spec_dir}"
 	rm -r "${_ktmp}"
 }
 
-function install_python() {
-	echo "Checking python..."
-	run_script python $THIS_DIR/build_python.sh
-	# if [[ ! -f $NOTES_DIR/python ]]; then
-	# 	echo "Installing python"
-	# 	/bin/bash ./build_python.sh
-	#
-	# 	touch $NOTES_DIR/python
-	# fi
-}
-
-function install_jupyter() {
-
-	if [[ ! -f $NOTES_DIR/jupyter ]]; then
-		echo "Configuring Jupyter notebook server for Python 2 and 3..."
-		setup_jupyter python2 "Python 2"
-		setup_jupyter python3 "Python 3"
-
-		touch $NOTES_DIR/jupyter
-	fi
-}
-
-function install_cuda() {
-	local res=$(run_script cuda $THIS_DIR/build_cuda.sh)
-	if [[ $res -eq 0 ]]; then
-		echo "Successfully installed cuda"
-	fi
-}
+echo "Configuring Jupyter notebook server for Python 2 and 3..."
+setup_jupyter python2 "Python 2"
+setup_jupyter python3 "Python 3"
 
 function install_opencv() {
-	local res=$(run_script opencv ./build_opencv.sh)
-	if [[ $res -eq 0 ]]; then
-		# Add OpenCV to profile
-		cat >>/etc/profile.d/opencv.sh <<EOI
-	export OPENCV_PREFIX="${OPENCV_INSTALL_PREFIX}"
-	export PATH="\${OPENCV_PREFIX}/bin:\${PATH}"
-	export LD_LIBRARY_PATH="\${OPENCV_PREFIX}/lib:\${LD_LIBRARY_PATH}"
-	export PKG_CONFIG_PATH="\${OPENCV_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}"
-	for _pp in "\${OPENCV_PREFIX}"/lib/python*/dist-packages; do
-		export PYTHONPATH="\${_pp}:\${PYTHONPATH}"
-	done
+	echo "Installing OpenCV..."
+
+	# Create download directory
+	OPENCV_WORKDIR="$(mktemp -d --tmpdir opencv-compile.XXXXXX)"
+	cd "${OPENCV_WORKDIR}"
+
+	# Download and extract OpenCV and OpenCV contrib modules
+	echo "Dowloading and extracting OpenCV..."
+	curl -L https://github.com/Itseez/opencv/archive/${OPENCV_VER}.tar.gz | tar xz
+	curl -L https://github.com/Itseez/opencv_contrib/archive/${OPENCV_CONTRIB_VER}.tar.gz | tar xz
+
+	echo "Compiling OpenCV..."
+	OPENCV_CONTRIB_MODULES=${OPENCV_WORKDIR}/opencv_contrib-${OPENCV_CONTRIB_VER}/modules
+
+	cd opencv-${OPENCV_VER}
+	mkdir release; cd release
+	cmake -DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=${OPENCV_INSTALL_PREFIX} \
+		-DOPENCV_EXTRA_MODULES_PATH=${OPENCV_CONTRIB_MODULES} \
+		..
+
+	make -j8 && make install
+
+	# Add OpenCV to profile
+	cat >>/etc/profile.d/opencv.sh <<EOI
+export OPENCV_PREFIX="${OPENCV_INSTALL_PREFIX}"
+export PATH="\${OPENCV_PREFIX}/bin:\${PATH}"
+export LD_LIBRARY_PATH="\${OPENCV_PREFIX}/lib:\${LD_LIBRARY_PATH}"
+export PKG_CONFIG_PATH="\${OPENCV_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}"
+for _pp in "\${OPENCV_PREFIX}"/lib/python*/dist-packages; do
+	export PYTHONPATH="\${_pp}:\${PYTHONPATH}"
+done
 EOI
 
-		echo "Deleting OpenCV build directory..."
-		rm -r "${OPENCV_WORKDIR}"
-	fi
+	echo "Deleting OpenCV build directory..."
+	rm -r "${OPENCV_WORKDIR}"
 }
 
-function install_spark() {
-	local res=$(run_script spark ./build_spark.sh)
-	if [[ $res -eq 0 ]]; then
-		echo "Installed spark"
-	fi
+function link_opencv() {
+  sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
+  ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/python3/dist-packages/
+  ln -sf /usr/local/src/opencv/release/lib/python3/cv2.* /usr/lib/python3/dist-packages/
 }
 
-function install_tensorflow() {
-	local res=$(run_script tensorflow ./build_tensorflow.sh)
-	if [[ $res -eq 0 ]]; then
-		echo "Installed tensorflow"
-	fi
-}
-
-function install_torch() {
-	local res=$(run_script torch ./build_torch.sh)
-	if [[ $res -eq 0 ]]; then
-		echo "Installed torch"
-	fi
-}
-
-function install_testing() {
-	echo "Checking testing..."
-	local res=$(run_script testing $THIS_DIR/build_test.sh)
-	if [[ $res -eq 0 ]]; then
-		echo "RESULT: $res"
-		touch $NOTES_DIR/testing
-	fi
-	# if [[ ! -f $NOTES_DIR/python ]]; then
-	# 	echo "Installing python"
-	# 	/bin/bash ./build_python.sh
-	#
-	# 	touch $NOTES_DIR/python
-	# fi
-}
-
-install_cuda
-install_python
-install_jupyter
-install_spark
-install_opencv
-install_tensorflow
-install_torch
+link_opencv
+# install_opencv

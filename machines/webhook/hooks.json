@@ -7,7 +7,7 @@
     [
       {
         "source": "payload",
-        "name": "repository.clone_url"
+        "name": "repository.ssh_url"
       },
       {
         "source": "payload",

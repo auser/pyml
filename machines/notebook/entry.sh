@@ -3,7 +3,7 @@
 USER_UID=${USER_UID:-2000}
 USER_LOGIN=${USER:-compute}
 USER_FULL_NAME="${USER_FULL_NAME:-Compute container user}"
-USER_DIR=${HOME:-"/home/${USER_LOGIN}"}
+USER_DIR="/home/${USER_LOGIN}"
 PASSWORD=${PASSWORD:-itsginger}
 
 JDIR="${USER_DIR}/.jupyter"
@@ -23,13 +23,12 @@ id -u $USER_LOGIN &>/dev/null || adduser --disabled-password \
         --gecos "${USER_FULL_NAME},,," "${USER_LOGIN}" >/dev/null
 # adduser "${USER_LOGIN}" compute-users
 
-chown -R $USER_LOGIN $USER_DIR
+# chown -R $USER_LOGIN $USER_DIR
+IPY_DIR=$(ipython locate)
+USER_IPY_DIR=$(su -c "ipython locate" $USER_LOGIN)
 
-# IPY_DIR=$(ipython locate)
-# USER_IPY_DIR=$(su -c "ipython locate" $USER_LOGIN)
-
-# ls -la $IPY_DIR
-# cp -R $IPY_DIR/* $USER_IPY_DIR
+ls -la $IPY_DIR
+cp -R $IPY_DIR/* $USER_IPY_DIR
 cd "${USER_DIR}"
 
 ## Create the config
@@ -88,7 +87,7 @@ c.InteractiveShellApp.matplotlib = 'inline'
 c.NotebookApp.notebook_dir = os.path.expanduser('~/notebooks/')
 EOF
 
-chown -R $USER_LOGIN $(dirname $(ipython locate profile))
+# chown -R $USER_LOGIN $(dirname $(ipython locate profile))
 
 # jupyter
 SUDO="sudo"

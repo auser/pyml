@@ -12,4 +12,6 @@ $GIT clone --depth 1 $CLONE_URL $NAME
 cd $NAME
 $GIT reset $SHA1 --hard
 
+pwd
+
 make build-all

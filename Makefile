@@ -31,8 +31,9 @@ build/%:
 dev/%: ARGS?=
 dev/%: DARGS?=
 dev/%: PORT?=8888
+dev/%: HOST_PORT?=$(PORT)
 dev/%:
-	docker run -it --rm -p $(PORT):8888 $(DARGS) $(OWNER)/$(notdir $@) $(ARGS)
+	docker run -it --rm -p $(PORT):$(HOST_PORT) $(DARGS) $(OWNER)/$(notdir $@) $(ARGS)
 
 push/%:
 	docker push $(OWNER)/$(notdir $@):latest

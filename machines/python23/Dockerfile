@@ -36,6 +36,7 @@ RUN apt-get install -y curl grep sed dpkg && \
 ENV PATH /opt/conda/bin:$PATH
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
+USER $D_USER
 
 # Install Python 3 packages
 RUN /opt/conda/bin/conda install python=3.4

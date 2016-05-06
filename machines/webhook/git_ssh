@@ -1,0 +1,5 @@
+#!/bin/sh
+
+SSH=$(which ssh)
+echo "SSH: $SSH"
+$SSH -o StrictHostKeyChecking=no -i /ssh/id_rsa "$@"
