@@ -9,11 +9,11 @@ GIT=$(which git)
 
 
 $GIT clone --depth 1 $CLONE_URL $REPO_PATH
-pushd $REPO_PATH
+cd $REPO_PATH
 $GIT reset $SHA1 --hard
 
 ## Build the images
 make build-all
-popd
+cd /
 
 rm -rf /tmp/$NAME
