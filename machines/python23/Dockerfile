@@ -108,11 +108,13 @@ USER root
 # Install Python 2 kernel spec globally to avoid permission problems when NB_UID
 # switching at runtime.
 RUN source activate py2 && \
-    python -m ipykernel install
+    $CONDA_DIR/envs/py2/bin/pip install \
+    --no-cache-dir --upgrade \
+    -r /tmp/requirements.txt
 
 ADD requirements.txt /tmp/requirements.txt
 RUN source activate py2 && \
-    $CONDA_DIR/envs/python2/bin/pip install \
+    $CONDA_DIR/envs/py2/bin/pip install \
       --no-cache-dir --upgrade \
       -r /tmp/requirements.txt
 RUN RUN source activate py3 && \
