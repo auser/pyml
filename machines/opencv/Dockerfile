@@ -103,12 +103,12 @@ USER compute
 RUN conda env list
 
 RUN source activate py2 && \
-    CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
+    export CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
     echo $CONDA_DIR && \
     cp $CONDA_DIR/include/*.h $CONDA_DIR/include/python2.7
 
 RUN source activate py3 && \
-    CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
+    export CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
     echo $CONDA_DIR && \
     cp $CONDA_DIR/include/*.h $CONDA_DIR/include/python3.4m
 
@@ -126,11 +126,13 @@ RUN source activate py3 && \
 # =================================
 # WORKDIR /usr/local/src
 WORKDIR $OPENCV_ROOT
-
+USER compute
 RUN mkdir -p $OPENCV_ROOT && \
     cd $OPENCV_ROOT && \
     git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv.git && \
     git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv_contrib.git && \
+    source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
+    source activate py3 && export PY3_CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
     mkdir $OPENCV_HOME/build && \
     cd $OPENCV_HOME/build && \
     cmake -D CMAKE_BUILD_TYPE=Release \
@@ -151,21 +153,22 @@ RUN mkdir -p $OPENCV_ROOT && \
           # -D WITH_GSTREAMER=YES \
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
-          -D PYTHON2_EXECUTABLE=$CONDA_DIR/envs/py2/bin/python \
-          -D PYTHON2_INCLUDE_DIR=$CONDA_DIR/envs/py2/include/python2.7 \
-          -D PYTHON2_LIBRARIES=$CONDA_DIR/envs/py2/lib/libpython2.7.so \
-          -D PYTHON2_PACKAGES_PATH=$CONDA_DIR/envs/py2/lib/python2.7/site-packages \
-          -D PYTHON2_NUMPY_INCLUDE_DIRS=$CONDA_DIR/envs/py2/lib/python2.7/site-packages/numpy/core/include/ \
+          -D PYTHON2_EXECUTABLE=$PY2_CONDA_DIR/bin/python \
+          -D PYTHON2_INCLUDE_DIR=$PY2_CONDA_DIR/include \
+          -D PYTHON2_LIBRARIES=$PY2_CONDA_DIR/lib/libpython2.7.so \
+          -D PYTHON2_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
+          -D PYTHON2_NUMPY_INCLUDE_DIRS=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
           -D BUILD_opencv_py3=ON \
-          -D PYTHON3_EXECUTABLE=$CONDA_DIR/bin/python \
-          -D PYTHON3_INCLUDE_DIR=$CONDA_DIR/include/py3.4m/ \
-          -D PYTHON3_LIBRARY=$CONDA_DIR/lib/libpy3.so \
-          -D PYTHON_LIBRARY=$CONDA_DIR/lib/libpy3.so \
-          -D PYTHON3_PACKAGES_PATH=$CONDA_DIR/lib/py3.4/site-packages \
-          -D PYTHON3_NUMPY_INCLUDE_DIRS=$CONDA_DIR/lib/py3.4/site-packages/numpy/core/include/ \
+          -D PYTHON3_EXECUTABLE=$PY3_CONDA_DIR/bin/python \
+          -D PYTHON3_INCLUDE_DIR=$PY3_CONDA_DIR/include/py3.4m/ \
+          -D PYTHON3_LIBRARY=$PY3_CONDA_DIR/lib/libpy3.so \
+          -D PYTHON_LIBRARY=$PY3_CONDA_DIR/lib/libpy3.so \
+          -D PYTHON3_PACKAGES_PATH=$PY3_CONDA_DIR/lib/python3.4/site-packages \
+          -D PYTHON3_NUMPY_INCLUDE_DIRS=$PY3_CONDA_DIR/lib/python3.4/site-packages/numpy/core/include/ \
           .. && \
-      make -j2 && \
-      make install && \
+      make -j8
+
+RUN make install && \
       ldconfig && \
       rm -rf $OPENCV_ROOT
 
@@ -173,9 +176,11 @@ RUN sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
 RUN ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/py3/dist-packages/
 RUN ln -sf /usr/local/src/opencv/release/lib/py3/cv2.* /usr/lib/py3/dist-packages/
 #
+
+USER compute
 ## Additional python modules
-RUN $CONDA_DIR/envs/py2/bin/pip install imutils
-RUN $CONDA_DIR/bin/pip install imutils
+RUN source activate py2 && pip install imutils
+RUN source activate py3 && pip install imutils
 
 # RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
 #     libboost-dev \
@@ -185,16 +190,14 @@ RUN $CONDA_DIR/bin/pip install imutils
 
 ## =================================
 
-## CLEAN UP
-RUN apt-get clean autoclean -yq && \
-    apt-get autoremove -yq && \
-    rm -rf /tmp/* /var/tmp/* && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf $OPENCV_ROOT/opencv && \
-    rm -rf $OPENCV_ROOT/opencv_contrib
-## CLEAN UP
+# ## CLEAN UP
+# RUN apt-get clean autoclean -yq && \
+#     apt-get autoremove -yq && \
+#     rm -rf /tmp/* /var/tmp/* && \
+#     rm -rf /var/lib/apt/lists/* && \
+#     rm -rf $OPENCV_ROOT/opencv && \
+#     rm -rf $OPENCV_ROOT/opencv_contrib
+# ## CLEAN UP
 
 ## Switch back to jupyter user (for now)
-USER compute
-
 WORKDIR /data
