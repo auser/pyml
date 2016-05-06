@@ -39,9 +39,9 @@ ENTRYPOINT [ "/usr/bin/tini", "--" ]
 USER $D_USER
 
 # Install Python 3 packages
-RUN $CONDA_DIR/bin/conda create -n py3 --clone root
-RUN /opt/conda/bin/conda update --all python=3.4
-RUN /opt/conda/bin/conda install --quiet --yes \
+RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4
+RUN source activate py3 && \
+  $CONDA_DIR/bin/conda install --quiet --yes \
     'ipywidgets=4.1*' \
     'pandas=0.17*' \
     'numexpr=2.5*' \
@@ -59,6 +59,7 @@ RUN /opt/conda/bin/conda install --quiet --yes \
     'numba=0.23*' \
     'bokeh=0.11*' \
     'h5py=2.5*' \
+    'conda-build=*' \
     && /opt/conda/bin/conda clean -tipsy
 
 # Install bleeding-edge Theano
@@ -77,7 +78,9 @@ RUN /opt/conda/bin/conda install --quiet --yes \
     # source activate python2 && python setup.py install
 
 # Install Python 2 packages
-RUN /opt/conda/bin/conda create --quiet --yes -p $CONDA_DIR/envs/python2 python=2.7 \
+RUN $CONDA_DIR/bin/conda create --quiet --yes -n py2 python=2.7
+RUN source activate py2 && \
+  $CONDA_DIR/bin/conda install --quiet --yes \
     'ipython=4.1*' \
     'ipywidgets=4.1*' \
     'pandas=0.17*' \
@@ -97,19 +100,23 @@ RUN /opt/conda/bin/conda create --quiet --yes -p $CONDA_DIR/envs/python2 python=
     'bokeh=0.11*' \
     'h5py=2.5*' \
     'pyzmq' \
-    && /opt/conda/bin/conda clean -tipsy
+    'conda-build=*' \
+    && $CONDA_DIR/bin/conda clean -tipsy
 
 USER root
 
 # Install Python 2 kernel spec globally to avoid permission problems when NB_UID
 # switching at runtime.
-RUN $CONDA_DIR/envs/python2/bin/python -m ipykernel install
+RUN source activate py2 && \
+    python -m ipykernel install
 
 ADD requirements.txt /tmp/requirements.txt
-RUN $CONDA_DIR/envs/python2/bin/pip install \
+RUN source activate py2 && \
+    $CONDA_DIR/envs/python2/bin/pip install \
       --no-cache-dir --upgrade \
       -r /tmp/requirements.txt
-RUN /opt/conda/bin/pip install \
+RUN RUN source activate py3 && \
+    $CONDA_DIR/bin/pip install \
       --no-cache-dir --upgrade \
       -r /tmp/requirements.txt
 RUN rm /tmp/requirements.txt
