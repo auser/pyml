@@ -103,31 +103,27 @@ RUN source activate py2 && \
     'pyzmq' \
     && $CONDA_DIR/bin/conda clean -tipsy
 
-USER root
-
 # Install Python 2 kernel spec globally to avoid permission problems when NB_UID
 # switching at runtime.
 RUN source activate py2 && \
-    $CONDA_DIR/envs/py2/bin/pip install \
-    --no-cache-dir --upgrade \
-    -r /tmp/requirements.txt
+    python -m ipykernel install --user
 
 ADD requirements.txt /tmp/requirements.txt
 RUN source activate py2 && \
-    $CONDA_DIR/envs/py2/bin/pip install \
-      --no-cache-dir --upgrade \
+    pip install --upgrade --user \
       -r /tmp/requirements.txt
-RUN RUN source activate py3 && \
-    $CONDA_DIR/bin/pip install \
-      --no-cache-dir --upgrade \
+RUN source activate py3 && \
+    pip install \
+      --no-cache-dir --upgrade --user \
       -r /tmp/requirements.txt
+
+USER root
 RUN rm /tmp/requirements.txt
-
-## CLEAN UP
-RUN apt-get clean autoclean -yq && \
-    apt-get autoremove -yq && \
-    rm -rf /tmp/* /var/tmp/* \
-    rm -rf /var/lib/apt/lists/*
-## CLEAN UP
-
 USER compute
+
+# ## CLEAN UP
+# RUN apt-get clean autoclean -yq && \
+#     apt-get autoremove -yq && \
+#     rm -rf /tmp/* /var/tmp/* \
+#     rm -rf /var/lib/apt/lists/*
+# ## CLEAN UP
