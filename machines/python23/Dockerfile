@@ -40,6 +40,7 @@ USER $D_USER
 
 # Install Python 3 packages
 RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4
+
 RUN source activate py3 && \
   $CONDA_DIR/bin/conda install --yes \
     'ipywidgets=4.1*' \
