@@ -36,7 +36,7 @@ RUN apt-get install -y curl grep sed dpkg && \
 ENV PATH /opt/conda/bin:$PATH
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
-USER $D_USER
+USER compute
 
 # Install Python 3 packages
 RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4
@@ -117,9 +117,9 @@ RUN source activate py3 && \
       --no-cache-dir --upgrade --user \
       -r /tmp/requirements.txt
 
-USER root
+# USER root
 RUN rm /tmp/requirements.txt
-USER compute
+# USER compute
 
 # ## CLEAN UP
 # RUN apt-get clean autoclean -yq && \
