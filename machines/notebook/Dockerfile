@@ -38,9 +38,10 @@ RUN addgroup compute-users
 
 # RUN chown -R compute $CONDA_DIR/
 
-# RUN $CONDA_DIR/bin/conda create -n py3 --clone root 
+# RUN $CONDA_DIR/bin/conda create -n py3 --clone root
 # RUN $CONDA_DIR/bin/conda create -n py2 --clone python2
 
+USER compute
 ADD setup /tmp/setup
 RUN cd /tmp/setup && \
     /bin/bash ./setup.sh && \
