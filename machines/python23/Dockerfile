@@ -39,7 +39,7 @@ ENTRYPOINT [ "/usr/bin/tini", "--" ]
 USER $D_USER
 
 # Install Python 3 packages
-RUN /opt/conda/bin/conda install python=3.4
+RUN /opt/conda/bin/conda install python=3.4 --clone root
 RUN /opt/conda/bin/conda update --all python=3.4
 RUN /opt/conda/bin/conda install --quiet --yes \
     'ipywidgets=4.1*' \
