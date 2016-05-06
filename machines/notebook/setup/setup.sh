@@ -13,7 +13,7 @@ CONDA_DIR=/opt/conda
 
 export PATH="/home/${USER_LOGIN}/.local/bin:$CONDA_DIR/bin:$PATH"
 
-for _pip in "py2 py3"; do
+for _pip in "py2" "py3"; do
 	echo "Upgrading ${_pip}..."
 	source activate ${_pip}
 	pip install --upgrade pip
