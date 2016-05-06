@@ -12,6 +12,7 @@ GIT=$(which git)
   cd $REPO_PATH
   $GIT reset $SHA1 --hard
 
+  ## Build the images
   make build-all
 )
 
