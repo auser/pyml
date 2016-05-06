@@ -50,8 +50,8 @@ echo $PATH
 }
 
 echo "Configuring Jupyter notebook server for Python 2 and 3..."
-setup_jupyter python2 "Python 2"
-setup_jupyter python3 "Python 3"
+setup_jupyter py2 "Python 2"
+setup_jupyter py3 "Python 3"
 
 function install_opencv() {
 	echo "Installing OpenCV..."
