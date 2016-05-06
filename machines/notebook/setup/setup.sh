@@ -13,13 +13,14 @@ CONDA_DIR=/opt/conda
 
 export PATH="/home/${USER_LOGIN}/.local/bin:$CONDA_DIR/bin:$PATH"
 
-for _pip in "$CONDA_DIR/envs/python2/bin/pip" "$CONDA_DIR/bin/pip"; do
+for _pip in "py2 py3"; do
 	echo "Upgrading ${_pip}..."
-	${_pip} install --upgrade pip
+	source activate ${_pip}
+	pip install --upgrade pip
 
 	echo "Installing remaining requirements via ${_pip}..."
 	for _pkg in ${PYTHON_PACKAGES}; do
-		${_pip} install --upgrade "${_pkg}"
+		pip install --upgrade "${_pkg}"
 	done
 done
 
@@ -27,16 +28,19 @@ function setup_jupyter() {
 	_python=$1
 	_name=$2
 
+	source activate ${_python}
+	_pythonPath=$(which python)
+
 	_ktmp=$(mktemp -d kernelspecs-XXXXXXX)
 	echo "Setting up Jupyter for ${_python}"
-	_spec_dir="${_ktmp}/$(basename ${_python})"
+	_spec_dir="${_ktmp}/$(basename ${_pythonPath})"
 	mkdir -p "${_spec_dir}"
 	cat >"${_spec_dir}/kernel.json" <<EOI
 {
 	"language": "python",
 	"display_name": "${_name}",
 	"argv": [
-		"${_python}", "-m", "ipykernel", "-f", "{connection_file}"
+		"${_pythonPath}", "-m", "ipykernel", "-f", "{connection_file}"
 	]
 }
 EOI
@@ -94,5 +98,5 @@ function link_opencv() {
   ln -sf /usr/local/src/opencv/release/lib/python3/cv2.* /usr/lib/python3/dist-packages/
 }
 
-link_opencv
+# link_opencv
 # install_opencv
