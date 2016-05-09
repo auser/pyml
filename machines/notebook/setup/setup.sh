@@ -11,6 +11,8 @@ OPENCV_INSTALL_PREFIX="/opt/opencv"
 PYTHON_PACKAGES="ipython jupyter"
 CONDA_DIR=/opt/conda
 
+cd /tmp
+
 export PATH="/home/${USER_LOGIN}/.local/bin:$CONDA_DIR/bin:$PATH"
 
 for _pip in "py2" "py3"; do
