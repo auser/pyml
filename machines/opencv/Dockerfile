@@ -89,6 +89,7 @@ RUN apt-get install -yq \
     qtmobility-dev \
     libeigen3-dev \
     libtesseract-dev
+    # gstreamer-*
 
 RUN apt-get install -yq \
     unzip \
@@ -139,7 +140,7 @@ RUN mkdir -p $OPENCV_ROOT && \
     cmake -D CMAKE_BUILD_TYPE=Release \
           -D CMAKE_INSTALL_PREFIX=/usr/local \
           -D WITH_TBB=ON \
-          # -D BUILD_PYTHON_SUPPORT=ON \
+          -D BUILD_PYTHON_SUPPORT=ON \
           -D WITH_V4L=ON \
 #          -D INSTALL_C_EXAMPLES=ON \     bug w/ tag=3.1.0: cmake has error
           -D INSTALL_C_EXAMPLES=OFF \
@@ -147,27 +148,29 @@ RUN mkdir -p $OPENCV_ROOT && \
           -D BUILD_EXAMPLES=OFF \
           -D BUILD_DOCS=OFF \
           -D OPENCV_EXTRA_MODULES_PATH=$OPENCV_ROOT/opencv_contrib/modules \
+          -D BUILD_NEW_PYTHON_SUPPORT=ON \
           # -D WITH_XIMEA=YES \
-#          -D WITH_QT=YES \
+         -D WITH_QT=ON \
+         -D WITH_OPENGL=ON \
           # -D WITH_FFMPEG=YES \
           # -D WITH_PVAPI=YES \
-          # -D WITH_GSTREAMER=YES \
+          -D WITH_GSTREAMER=YES \
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
           -D PYTHON_EXECUTABLE=$PY2_CONDA_DIR/bin/python \
           -D PYTHON_INCLUDE_DIR=$PY2_CONDA_DIR/include \
           -D PYTHON_LIBRARY=$PY2_CONDA_DIR/lib/libpython2.7.so \
           -D PYTHON_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
-          -D PYTHON_NUMPY_INCLUDE_DIRS=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
+          -D PYTHON_NUMPY_INCLUDE=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
 
-          -D BUILD_opencv_python=ON \
+          -D BUILD_opencv_python2=ON \
           -D BUILD_opencv_python3=ON \
           -D PYTHON3_EXECUTABLE=$PY3_CONDA_DIR/bin/python \
           -D PYTHON3_INCLUDE_DIR=$PY3_CONDA_DIR/include/python3.4m/ \
           -D PYTHON3_LIBRARY=$PY3_CONDA_DIR/lib/libpython3.4m.so \
           -D PYTHON_LIBRARY=$PY3_CONDA_DIR/lib/libpython3.4m.so \
           -D PYTHON3_PACKAGES_PATH=$PY3_CONDA_DIR/lib/python3.4/site-packages \
-          -D PYTHON3_NUMPY_INCLUDE_DIRS=$PY3_CONDA_DIR/lib/python3.4/site-packages/numpy/core/include/ \
+          -D PYTHON3_NUMPY_INCLUDE_DIR=$PY3_CONDA_DIR/lib/python3.4/site-packages/numpy/core/include/ \
           .. && \
       make -j8
 
@@ -182,7 +185,7 @@ RUN cd $OPENCV_HOME/build && \
 RUN sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
 
 USER compute
-RUN conda info --json
+RUN /usr/local/src/opencv/release/
 RUN source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && \
     source activate py3 && export PY3_CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && \
     echo "PY3_CONDA_DIR: $PY3_CONDA_DIR" && \
