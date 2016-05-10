@@ -161,7 +161,7 @@ RUN mkdir -p $OPENCV_ROOT && \
           -D PYTHON2_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
           -D PYTHON2_NUMPY_INCLUDE_DIRS=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
 
-          -D BUILD_opencv_py3=ON \
+          -D BUILD_opencv_python3=ON \
           -D PYTHON3_EXECUTABLE=$PY3_CONDA_DIR/bin/python \
           -D PYTHON3_INCLUDE_DIR=$PY3_CONDA_DIR/include/python3.4m/ \
           -D PYTHON3_LIBRARY=$PY3_CONDA_DIR/lib/libpython3.4.so \
@@ -188,7 +188,7 @@ RUN source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .pk
     echo "PY3_CONDA_DIR: $PY3_CONDA_DIR" && \
     ls -l $PY3_CONDA_DIR && \
     ln -sf /usr/local/src/opencv/release/lib/cv2.* $PY3_CONDA_DIR && \
-    ln -sf /usr/local/src/opencv/release/lib/py3/cv2.* $PY3_CONDA_DIR
+    ln -sf /usr/local/src/opencv/release/lib/python3.4m/cv2.* $PY3_CONDA_DIR
 #
 
 USER compute
