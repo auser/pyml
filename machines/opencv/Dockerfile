@@ -127,12 +127,14 @@ RUN source activate py3 && \
 # WORKDIR /usr/local/src
 WORKDIR $OPENCV_ROOT
 USER compute
+RUN git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv.git $OPENCV_ROOT/opencv
+RUN git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv_contrib.git $OPENCV_ROOT/opencv_contrib
+
 RUN mkdir -p $OPENCV_ROOT && \
     cd $OPENCV_ROOT && \
-    git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv.git && \
-    git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv_contrib.git && \
     source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
     source activate py3 && export PY3_CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
+
     mkdir $OPENCV_HOME/build && \
     cd $OPENCV_HOME/build && \
     cmake -D CMAKE_BUILD_TYPE=Release \
@@ -158,11 +160,12 @@ RUN mkdir -p $OPENCV_ROOT && \
           -D PYTHON2_LIBRARIES=$PY2_CONDA_DIR/lib/libpython2.7.so \
           -D PYTHON2_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
           -D PYTHON2_NUMPY_INCLUDE_DIRS=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
+
           -D BUILD_opencv_py3=ON \
           -D PYTHON3_EXECUTABLE=$PY3_CONDA_DIR/bin/python \
-          -D PYTHON3_INCLUDE_DIR=$PY3_CONDA_DIR/include/py3.4m/ \
-          -D PYTHON3_LIBRARY=$PY3_CONDA_DIR/lib/libpy3.so \
-          -D PYTHON_LIBRARY=$PY3_CONDA_DIR/lib/libpy3.so \
+          -D PYTHON3_INCLUDE_DIR=$PY3_CONDA_DIR/include/python3.4m/ \
+          -D PYTHON3_LIBRARY=$PY3_CONDA_DIR/lib/libpython3.4.so \
+          -D PYTHON_LIBRARY=$PY3_CONDA_DIR/lib/libpython3.4.so \
           -D PYTHON3_PACKAGES_PATH=$PY3_CONDA_DIR/lib/python3.4/site-packages \
           -D PYTHON3_NUMPY_INCLUDE_DIRS=$PY3_CONDA_DIR/lib/python3.4/site-packages/numpy/core/include/ \
           .. && \
@@ -173,8 +176,8 @@ RUN cd $OPENCV_HOME/build && \
       mkdir -p /usr/local/share/OpenCV/ && \
       chown -R compute /usr/local/share/OpenCV/ && \
       make install && \
-      ldconfig && \
-      rm -rf $OPENCV_ROOT
+      ldconfig
+      # rm -rf $OPENCV_ROOT
 
 RUN sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
 

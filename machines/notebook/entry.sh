@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash
 
 USER_UID=${USER_UID:-2000}
 USER_LOGIN=${USER:-compute}
@@ -25,10 +25,8 @@ id -u $USER_LOGIN &>/dev/null || adduser --disabled-password \
 
 # chown -R $USER_LOGIN $USER_DIR
 IPY_DIR=$(ipython locate)
-USER_IPY_DIR=$(su -c "ipython locate" $USER_LOGIN)
 
 ls -la $IPY_DIR
-cp -R $IPY_DIR/* $USER_IPY_DIR
 cd "${USER_DIR}"
 
 ## Create the config
@@ -37,7 +35,7 @@ cd "${USER_DIR}"
 
 echo $PASSWORD > $PASSWORD_FILE
 
-cat<<EOF | sudo tee ${CONF_FILE}
+cat<<EOF | tee ${CONF_FILE}
 import os
 import sys
 
@@ -91,4 +89,5 @@ EOF
 
 # jupyter
 SUDO="sudo"
-HOME="${USER_DIR}" $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"}
+# HOME="${USER_DIR}" $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"}
+HOME="${USER_DIR}" /bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"

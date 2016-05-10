@@ -15,23 +15,15 @@ cd /tmp
 
 export PATH="/home/${USER_LOGIN}/.local/bin:$CONDA_DIR/bin:$PATH"
 
-for _pip in "py2" "py3"; do
-	echo "Upgrading ${_pip}..."
-	source activate ${_pip}
-	pip install --upgrade pip
-
-	echo "Installing remaining requirements via ${_pip}..."
-	for _pkg in ${PYTHON_PACKAGES}; do
-		pip install --upgrade "${_pkg}"
-	done
-done
-
 function setup_jupyter() {
 	_python=$1
 	_name=$2
 
+	echo "Upgrading ${_name}..."
 	source activate ${_python}
+
 	_pythonPath=$(which python)
+	pip install --upgrade pip
 
 	_ktmp=$(mktemp -d kernelspecs-XXXXXXX)
 	echo "Setting up Jupyter for ${_python}"
@@ -47,7 +39,9 @@ function setup_jupyter() {
 }
 EOI
 echo $PATH
-	jupyter kernelspec install "${_spec_dir}"
+	jupyter kernelspec install "${_spec_dir}" --user
+	CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && ln -sf /usr/local/src/opencv/release/lib/cv2.* $CONDA_DIR
+	ls -l /usr/local/src
 	rm -r "${_ktmp}"
 }
 
