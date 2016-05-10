@@ -2,8 +2,7 @@ OWNER=auser
 
 .PHONY: build-all help environment-check release-all
 
-ALL_STACKS:=cuda \
-	python23 \
+ALL_STACKS:=python23 \
 	spark \
 	opencv \
 	tensorflow \

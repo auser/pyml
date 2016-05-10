@@ -1,5 +1,6 @@
 # FROM jupyter/minimal-notebook
 FROM auser/cuda
+# FROM nvidia/cuda:7.5-cudnn4-devel
 
 USER root
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh

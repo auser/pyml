@@ -1,5 +1,6 @@
 # FROM jupyter/scipy-notebook
-FROM ubuntu:14.04
+# FROM ubuntu:14.04
+FROM bethgelab/xserver:cuda7.5-cudnn4
 
 ADD etc/apt/sources.list /etc/apt/
 RUN apt-get update -qq
@@ -37,10 +38,10 @@ RUN cd /tmp && \
 # Install CUDA drivers (silent, no kernel)
   ./NVIDIA-Linux-x86_64-*.run -s --no-kernel-module && \
 # Install toolkit (silent)
-  ./cuda-linux64-rel-*.run -noprompt && \
+  ./cuda-linux64-rel-*.run -noprompt
 # Clean up
-  rm -rf *
+  # rm -rf *
 
 # Add to path
-ENV PATH=/usr/local/cuda/bin:$PATH \
-  LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+ENV PATH=/usr/local/cuda/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH

@@ -19,7 +19,6 @@ RUN apt-get install -yq \
   bc \
   cmake \
   libgflags-dev \
-  libavcodec-dev \
   build-essential \
   checkinstall \
   pkg-config \
@@ -27,7 +26,6 @@ RUN apt-get install -yq \
   libjpeg-dev \
   libtiff-dev \
   libjasper-dev \
-  libavformat-dev \
   libswscale-dev \
   libv4l-dev \
   libgoogle-glog-dev \
@@ -58,24 +56,23 @@ RUN apt-get install -yq qt5-default
 
 # Media I/O:
 RUN apt-get install -yq zlib1g-dev \
-            libjpeg-dev \
             libwebp-dev \
             libpng-dev \
             libtiff5-dev \
-            libjasper-dev \
             libopenexr-dev \
             libgdal-dev
 
 # Video I/O:
 RUN apt-get install -yq libdc1394-22-dev \
             libavcodec-dev libavformat-dev \
-            libswscale-dev \
             libtheora-dev \
             libvorbis-dev \
             libxvidcore-dev \
+            libxslt1-dev \
             libx264-dev yasm \
             libopencore-amrnb-dev \
-            libopencore-amrwb-dev libv4l-dev \
+            libmp3lame-dev \
+            libopencore-amrwb-dev \
             libxine2-dev
 
 # Parallelism and linear algebra libraries:
@@ -88,8 +85,12 @@ RUN apt-get install -yq \
     libxml2-dev \
     qtmobility-dev \
     libeigen3-dev \
-    libtesseract-dev
-    # gstreamer-*
+    libtesseract-dev \
+    libgstreamer-plugins-base0.10-dev \
+    libgstreamer0.10-dev \
+    libphonon-dev \
+    # OCR libs
+		tesseract-ocr tesseract-ocr-eng libtesseract-dev libleptonica-dev
 
 RUN apt-get install -yq \
     unzip \
@@ -131,68 +132,65 @@ USER compute
 RUN git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv.git $OPENCV_ROOT/opencv
 RUN git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv_contrib.git $OPENCV_ROOT/opencv_contrib
 
-RUN mkdir -p $OPENCV_ROOT && \
-    cd $OPENCV_ROOT && \
-    source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
+RUN mkdir $OPENCV_HOME/build
+WORKDIR $OPENCV_HOME/build
+
+RUN source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
     source activate py3 && export PY3_CONDA_DIR="$(conda info --json | jq -r .default_prefix)" && \
-    mkdir $OPENCV_HOME/build && \
-    cd $OPENCV_HOME/build && \
     cmake -D CMAKE_BUILD_TYPE=Release \
           -D CMAKE_INSTALL_PREFIX=/usr/local \
           -D WITH_TBB=ON \
           -D BUILD_PYTHON_SUPPORT=ON \
           -D WITH_V4L=ON \
 #          -D INSTALL_C_EXAMPLES=ON \     bug w/ tag=3.1.0: cmake has error
-          -D INSTALL_C_EXAMPLES=OFF \
-          -D INSTALL_PYTHON_EXAMPLES=OFF \
-          -D BUILD_EXAMPLES=OFF \
-          -D BUILD_DOCS=OFF \
-          -D OPENCV_EXTRA_MODULES_PATH=$OPENCV_ROOT/opencv_contrib/modules \
-          -D BUILD_NEW_PYTHON_SUPPORT=ON \
-          # -D WITH_XIMEA=YES \
-         -D WITH_QT=ON \
-         -D WITH_OPENGL=ON \
-          # -D WITH_FFMPEG=YES \
-          # -D WITH_PVAPI=YES \
+          -D INSTALL_PYTHON_EXAMPLES=ON \
+          -D BUILD_EXAMPLES=ON \
+          -D BUILD_DOCS=ON \
+          -D OPENCV_EXTRA_MODULES_PATH=/usr/local/src/opencv_contrib/modules \
+          -D WITH_XIMEA=YES \
+#          -D WITH_QT=YES \
+          -D WITH_FFMPEG=YES \
+          -D WITH_PVAPI=YES \
           -D WITH_GSTREAMER=YES \
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
-          -D PYTHON_EXECUTABLE=$PY2_CONDA_DIR/bin/python \
-          -D PYTHON_INCLUDE_DIR=$PY2_CONDA_DIR/include \
-          -D PYTHON_LIBRARY=$PY2_CONDA_DIR/lib/libpython2.7.so \
-          -D PYTHON_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
-          -D PYTHON_NUMPY_INCLUDE=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
 
-          -D BUILD_opencv_python2=ON \
+          -D OPENCV_EXTRA_MODULES_PATH=$OPENCV_ROOT/opencv_contrib/modules \
+
+          -D PYTHON2_EXECUTABLE=$PY2_CONDA_DIR/bin/python \
+          -D PYTHON2_INCLUDE_DIR=$PY2_CONDA_DIR/include/python2.7 \
+          -D PYTHON2_LIBRARIES=$PY2_CONDA_DIR/lib/libpython2.7.so \
+          -D PYTHON2_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
+          -D PYTHON2_NUMPY_INCLUDE_DIRS=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
+
           -D BUILD_opencv_python3=ON \
           -D PYTHON3_EXECUTABLE=$PY3_CONDA_DIR/bin/python \
           -D PYTHON3_INCLUDE_DIR=$PY3_CONDA_DIR/include/python3.4m/ \
           -D PYTHON3_LIBRARY=$PY3_CONDA_DIR/lib/libpython3.4m.so \
           -D PYTHON_LIBRARY=$PY3_CONDA_DIR/lib/libpython3.4m.so \
           -D PYTHON3_PACKAGES_PATH=$PY3_CONDA_DIR/lib/python3.4/site-packages \
-          -D PYTHON3_NUMPY_INCLUDE_DIR=$PY3_CONDA_DIR/lib/python3.4/site-packages/numpy/core/include/ \
+          -D PYTHON3_NUMPY_INCLUDE_DIRS=$PY3_CONDA_DIR/lib/python3.4/site-packages/numpy/core/include/ \
           .. && \
       make -j8
 
 USER root
-RUN cd $OPENCV_HOME/build && \
-      mkdir -p /usr/local/share/OpenCV/ && \
-      chown -R compute /usr/local/share/OpenCV/ && \
-      make install && \
-      ldconfig
-      # rm -rf $OPENCV_ROOT
-
-RUN sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
+RUN make install
+RUN sh -c 'echo "$OPENCV_HOME/build/lib:/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
+RUN ldconfig
 
 USER compute
-RUN /usr/local/src/opencv/release/
+RUN ls -l $OPENCV_HOME/build/lib
 RUN source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && \
     source activate py3 && export PY3_CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && \
     echo "PY3_CONDA_DIR: $PY3_CONDA_DIR" && \
     ls -l $PY3_CONDA_DIR && \
     ln -sf /usr/local/src/opencv/release/lib/cv2.* $PY3_CONDA_DIR && \
-    ln -sf /usr/local/src/opencv/release/lib/python3.4m/cv2.* $PY3_CONDA_DIR
+    ln -sf /usr/local/src/opencv/release/lib/python3.4m/cv2.* $PY3_CONDA_DIR && \
+    mv /opt/conda/lib/libm.so /opt/conda/lib/libmXXX.so
 #
+
+# Bug in Anaconda distribution causes `GLIBC_2.15' not found error. Here is workaround:
+Run mv /opt/conda/lib/libm.so.6 /opt/conda/lib/libm.so.6XXX
 
 USER compute
 ## Additional python modules
