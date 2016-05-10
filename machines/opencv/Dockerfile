@@ -155,12 +155,13 @@ RUN mkdir -p $OPENCV_ROOT && \
           # -D WITH_GSTREAMER=YES \
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
-          -D PYTHON2_EXECUTABLE=$PY2_CONDA_DIR/bin/python \
-          -D PYTHON2_INCLUDE_DIR=$PY2_CONDA_DIR/include \
-          -D PYTHON2_LIBRARIES=$PY2_CONDA_DIR/lib/libpython2.7.so \
-          -D PYTHON2_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
-          -D PYTHON2_NUMPY_INCLUDE_DIRS=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
+          -D PYTHON_EXECUTABLE=$PY2_CONDA_DIR/bin/python \
+          -D PYTHON_INCLUDE_DIR=$PY2_CONDA_DIR/include \
+          -D PYTHON_LIBRARIES=$PY2_CONDA_DIR/lib/libpython2.7.so \
+          -D PYTHON_PACKAGES_PATH=$PY2_CONDA_DIR/lib/python2.7/site-packages \
+          -D PYTHON_NUMPY_INCLUDE_DIRS=$PY2_CONDA_DIR/lib/python2.7/site-packages/numpy/core/include/ \
 
+          -D BUILD_opencv_python=ON \
           -D BUILD_opencv_python3=ON \
           -D PYTHON3_EXECUTABLE=$PY3_CONDA_DIR/bin/python \
           -D PYTHON3_INCLUDE_DIR=$PY3_CONDA_DIR/include/python3.4m/ \
