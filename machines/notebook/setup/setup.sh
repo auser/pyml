@@ -15,40 +15,6 @@ cd /tmp
 
 export PATH="/home/${USER_LOGIN}/.local/bin:$CONDA_DIR/bin:$PATH"
 
-function setup_jupyter() {
-	_python=$1
-	_name=$2
-
-	echo "Upgrading ${_name}..."
-	source activate ${_python}
-
-	_pythonPath=$(which python)
-	pip install --upgrade pip
-
-	_ktmp=$(mktemp -d kernelspecs-XXXXXXX)
-	echo "Setting up Jupyter for ${_python}"
-	_spec_dir="${_ktmp}/$(basename ${_pythonPath})"
-	mkdir -p "${_spec_dir}"
-	cat >"${_spec_dir}/kernel.json" <<EOI
-{
-	"language": "python",
-	"display_name": "${_name}",
-	"argv": [
-		"${_pythonPath}", "-m", "ipykernel", "-f", "{connection_file}"
-	]
-}
-EOI
-echo $PATH
-	jupyter kernelspec install "${_spec_dir}" --user
-	CONDA_DIR="$(conda info --json | jq -r .pkgs_dirs[0])" && ln -sf /usr/local/src/opencv/release/lib/cv2.* $CONDA_DIR
-	ls -l /usr/local/src
-	rm -r "${_ktmp}"
-}
-
-echo "Configuring Jupyter notebook server for Python 2 and 3..."
-setup_jupyter py2 "Python 2"
-setup_jupyter py3 "Python 3"
-
 function install_opencv() {
 	echo "Installing OpenCV..."
 
@@ -58,8 +24,8 @@ function install_opencv() {
 
 	# Download and extract OpenCV and OpenCV contrib modules
 	echo "Dowloading and extracting OpenCV..."
-	curl -L https://github.com/Itseez/opencv/archive/${OPENCV_VER}.tar.gz | tar xz
-	curl -L https://github.com/Itseez/opencv_contrib/archive/${OPENCV_CONTRIB_VER}.tar.gz | tar xz
+  git clone --branch $OPENCV_VER --depth 1 https://github.com/Itseez/opencv.git
+  git clone --branch $OPENCV_VER --depth 1 https://github.com/Itseez/opencv_contrib.git
 
 	echo "Compiling OpenCV..."
 	OPENCV_CONTRIB_MODULES=${OPENCV_WORKDIR}/opencv_contrib-${OPENCV_CONTRIB_VER}/modules
@@ -88,11 +54,4 @@ EOI
 	rm -r "${OPENCV_WORKDIR}"
 }
 
-function link_opencv() {
-  sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
-  ln -sf /usr/local/src/opencv/release/lib/cv2.* /usr/lib/python3/dist-packages/
-  ln -sf /usr/local/src/opencv/release/lib/python3/cv2.* /usr/lib/python3/dist-packages/
-}
-
-# link_opencv
-# install_opencv
+install_opencv

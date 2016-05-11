@@ -1,5 +1,6 @@
 # FROM auser/python23
-FROM auser/spark
+# FROM auser/spark
+FROM bethgelab/jupyter-deeplearning:cuda7.5-cudnn4
 
 ENV OPENCV_VERSION 3.1.0
 ENV LD_LIBRARY_PATH /usr/local/lib
