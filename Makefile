@@ -2,12 +2,13 @@ OWNER=auser
 
 .PHONY: build-all help environment-check release-all
 
-ALL_STACKS:=python23 \
-	spark \
-	opencv \
-	tensorflow \
-	torch \
-	notebook
+ALL_STACKS:=notebook-opencv
+# ALL_STACKS:=python23 \
+	# spark \
+	# opencv \
+	# tensorflow \
+	# torch \
+	notebook-opencv
 	# tensorflow \
 	# torch \
 

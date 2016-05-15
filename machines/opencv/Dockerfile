@@ -185,12 +185,8 @@ RUN source activate py2 && export PY2_CONDA_DIR="$(conda info --json | jq -r .pk
     echo "PY3_CONDA_DIR: $PY3_CONDA_DIR" && \
     ls -l $PY3_CONDA_DIR && \
     ln -sf /usr/local/src/opencv/release/lib/cv2.* $PY3_CONDA_DIR && \
-    ln -sf /usr/local/src/opencv/release/lib/python3.4m/cv2.* $PY3_CONDA_DIR && \
-    mv /opt/conda/lib/libm.so /opt/conda/lib/libmXXX.so
+    ln -sf /usr/local/src/opencv/release/lib/python3.4m/cv2.* $PY3_CONDA_DIR
 #
-
-# Bug in Anaconda distribution causes `GLIBC_2.15' not found error. Here is workaround:
-Run mv /opt/conda/lib/libm.so.6 /opt/conda/lib/libm.so.6XXX
 
 USER compute
 ## Additional python modules
