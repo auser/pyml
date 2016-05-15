@@ -152,10 +152,12 @@ RUN CUDA_LIB_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib/stubs/:/usr/local
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
           -D ENABLE_FAST_MATH=1 -D CUDA_FAST_MATH=1 -D WITH_CUBLAS=1 \
+          -D Tesseract_LIBRARY=/usr/local/tesseract \
+          -D Tesseract_INCLUDE_DIR=/usr/include/tesseract \
 
           -D OPENCV_EXTRA_MODULES_PATH=$INSTALL_ROOT/opencv_contrib/modules \
 
-          -D BUILD_opencv_python=ON \
+          -D BUILD_opencv_python2=ON \
           -D PYTHON2_EXECUTABLE=/usr/bin/python2.7 \
           -D PYTHON2_INCLUDE_DIR=/usr/include/python2.7 \
           -D PYTHON2_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpython2.7.so \
