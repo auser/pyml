@@ -227,10 +227,10 @@ RUN python3.4 -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))
 #######################
 # Cleanup
 #######################
-# RUN rm -rf /usr/local/src/leptonica && \
-#     rm -rf /usr/local/src/tesseract && \
-#     rm -rf /usr/local/src/opencv
-#
+RUN rm -rf /usr/local/src/leptonica && \
+    rm -rf /usr/local/src/tesseract && \
+    rm -rf /usr/local/src/opencv
+    
 # USER compute
 RUN mkdir /data
 WORKDIR /data
