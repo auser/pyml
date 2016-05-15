@@ -1,0 +1,8 @@
+[global]
+device = gpu
+floatX = float32
+optimizer_including = cudnn
+allow_gc = False
+
+[lib]
+cnmem=.95

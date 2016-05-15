@@ -9,6 +9,7 @@ ENV FFMPEG_VERSION v0.6.1
 
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV INSTALL_ROOT /usr/local/src
+ENV CUDA_ROOT /usr/local/cuda/bin
 ENV NUM_CORES 4
 
 RUN apt-get update -qq
@@ -229,8 +230,7 @@ RUN python3.4 -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))
 RUN rm -rf /usr/local/src/leptonica && \
     rm -rf /usr/local/src/tesseract && \
     rm -rf /usr/local/src/opencv && \
-    apt-get clean -yq && \
-    apt-get autoremove -yq
+    apt-get clean -yq
 
 # USER compute
 RUN mkdir /data
