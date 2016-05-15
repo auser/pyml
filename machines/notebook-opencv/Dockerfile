@@ -142,8 +142,8 @@ RUN CUDA_LIB_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib/stubs/:/usr/local
           -D WITH_V4L=ON \
 #          -D INSTALL_C_EXAMPLES=ON \     bug w/ tag=3.1.0: cmake has error
           -D INSTALL_PYTHON_EXAMPLES=ON \
-          -D BUILD_EXAMPLES=ON \
-          -D BUILD_DOCS=ON \
+          -D BUILD_EXAMPLES=OFF \
+          -D BUILD_DOCS=OFF \
           -D OPENCV_EXTRA_MODULES_PATH=/usr/local/src/opencv_contrib/modules \
           -D WITH_XIMEA=YES \
 #          -D WITH_QT=YES \
