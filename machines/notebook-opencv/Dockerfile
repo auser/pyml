@@ -4,11 +4,11 @@ FROM bethgelab/jupyter-torch:cuda7.5-cudnn4
 
 ENV OPENCV_VERSION 3.1.0
 ENV TESSERACT_VERSION 3.04.00
-ENV LEPTONICA_VERSION v1.73
+ENV LEPTONICA_VERSION 1.73
 ENV FFMPEG_VERSION v0.6.1
 
 ENV LD_LIBRARY_PATH /usr/local/lib
-ENV INSTALL_ROOT /usr/local/src/
+ENV INSTALL_ROOT /usr/local/src
 ENV NUM_CORES 4
 
 RUN apt-get update -qq
@@ -62,7 +62,6 @@ RUN apt-get update -qq && apt-get install -qy --force-yes \
     libtiff4-dev \
     libjpeg62-dev \
     libpng12-dev \
-    tmux \
     libqt4-dev \
     libphonon-dev \
     libxml2-dev \
@@ -77,12 +76,12 @@ RUN apt-get update -qq && apt-get install -qy --force-yes \
     unzip; \
     apt-get clean
 
+WORKDIR $INSTALL_ROOT
 RUN git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv.git $INSTALL_ROOT/opencv && \
     git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/opencv_contrib.git $INSTALL_ROOT/opencv_contrib && \
-    git clone --branch $TESSERACT_VERSION --depth 1 https://github.com/tesseract-ocr/tesseract.git $INSTALL_ROOT/tesseract && \
-    git clone --branch $FFMPEG_VERSION --depth 1 git://source.ffmpeg.org/ffmpeg $INSTALL_ROOT/ffmpeg && \
-    git clone --branch $LEPTONICA_VERSION --depth 1 https://github.com/DanBloomberg/leptonica.git
-
+    # git clone --branch $TESSERACT_VERSION --depth 1 https://github.com/tesseract-ocr/tesseract.git $INSTALL_ROOT/tesseract && \
+    # git clone --branch $LEPTONICA_VERSION --depth 1 https://github.com/DanBloomberg/leptonica.git $INSTALL_ROOT/leptonica && \
+    git clone --branch $FFMPEG_VERSION --depth 1 git://source.ffmpeg.org/ffmpeg $INSTALL_ROOT/ffmpeg
 
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
@@ -90,12 +89,19 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 # Tesseract
 #######################
 
-WORKDIR $INSTALL_ROOT/leptonica
-RUN cd $INSTALL_ROOT/leptonica && \
-    ./autobuild && \
+RUN apt-get install -yq \
+    libwebp-dev \
+    giflib-tools \
+    autoconf automake libtool checkinstall
+
+WORKDIR $INSTALL_ROOT
+RUN wget http://www.leptonica.org/source/leptonica-${LEPTONICA_VERSION}.tar.gz -O $INSTALL_ROOT/leptonica.tar.gz && \
+    tar -zxvf leptonica.tar.gz && \
+    rm -rf leptonica.tar.gz && \
+    cd leptonica-${LEPTONICA_VERSION} && \
     ./configure && \
-    make && \
-    make install && \
+    make -j ${NUM_CORES} && \
+    checkinstall && \
     ldconfig
 
 #######################
@@ -107,13 +113,16 @@ RUN cd $INSTALL_ROOT/leptonica && \
 # Tesseract
 #######################
 
-WORKDIR $INSTALL_ROOT/tesseract
-RUN cd $INSTALL_ROOT/tesseract && \
-    mkdir m4 && \
-    ./autogen.sh && \
+WORKDIR $INSTALL_ROOT/
+RUN wget https://github.com/tesseract-ocr/tesseract/archive/${TESSERACT_VERSION}.tar.gz \
+      -O $INSTALL_ROOT/tesseract.tar.gz
+RUN tar -zxvf $INSTALL_ROOT/tesseract.tar.gz && \
+    rm -rf tesseract.tar.gz && \
+    cd tesseract-${TESSERACT_VERSION} && \
+    ls -la && \
+    /bin/bash ./autogen.sh && \
     ./configure && \
-    LDFLAGS="-L/usr/local/lib" CFLAGS="-I/usr/local/include" make && \
-    make install && \
+    LDFLAGS="-L/usr/local/lib" CFLAGS="-I/usr/local/include" make -j ${NUM_CORES} && \
     ldconfig
 
 #######################
@@ -200,6 +209,13 @@ RUN python -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))"
 
 # RUN rm -rf /usr/local/src/*
 
+#######################
+# Cleanup
+#######################
+# RUN rm -rf /usr/local/src/leptonica && \
+#     rm -rf /usr/local/src/tesseract && \
+#     rm -rf /usr/local/src/opencv
+#
 # USER compute
 RUN mkdir /data
 WORKDIR /data
