@@ -191,7 +191,6 @@ RUN cp /usr/local/src/opencv/build/lib/cv2.so $(python2 -c "import site; print(s
 RUN python2.7 -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))"
 RUN python3.4 -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))"
 
-
 #######################
 # End OpenCV
 #######################
@@ -229,8 +228,10 @@ RUN python3.4 -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))
 #######################
 RUN rm -rf /usr/local/src/leptonica && \
     rm -rf /usr/local/src/tesseract && \
-    rm -rf /usr/local/src/opencv
-    
+    rm -rf /usr/local/src/opencv && \
+    apt-get clean -yq && \
+    apt-get autoremove -yq
+
 # USER compute
 RUN mkdir /data
 WORKDIR /data
