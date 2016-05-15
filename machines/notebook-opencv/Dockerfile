@@ -137,7 +137,7 @@ WORKDIR $INSTALL_ROOT/opencv/build
 RUN CUDA_LIB_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib/stubs/:/usr/local/cuda/lib64/stubs/:$LD_LIBRARY_PATH \
     LD_LIBRARY_PATH=$CUDA_LIB_PATH:$LD_LIBRARY_PATH \
     cmake -D CMAKE_BUILD_TYPE=Release \
-          -D CMAKE_INSTALL_PREFIX=/usr/local \
+          -D CMAKE_INSTALL_PREFIX=$(python3 -c "import sys; print(sys.prefix)") \
           -D WITH_TBB=ON \
           -D WITH_V4L=ON \
 #          -D INSTALL_C_EXAMPLES=ON \     bug w/ tag=3.1.0: cmake has error
@@ -153,31 +153,43 @@ RUN CUDA_LIB_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib/stubs/:/usr/local
           -D WITH_TIFF=YES \
           -D WITH_OPENCL=YES \
           -D ENABLE_FAST_MATH=1 -D CUDA_FAST_MATH=1 -D WITH_CUBLAS=1 \
-          -D Tesseract_LIBRARY=/usr/local/tesseract \
-          -D Tesseract_INCLUDE_DIR=/usr/include/tesseract \
+
+          -D Tesseract_LIBRARY=/usr/local/lib/libtesseract.so \
+          -D Tesseract_INCLUDE_DIR=/usr/local/include/tesseract \
 
           -D OPENCV_EXTRA_MODULES_PATH=$INSTALL_ROOT/opencv_contrib/modules \
 
           -D BUILD_opencv_python2=ON \
-          -D PYTHON2_EXECUTABLE=/usr/bin/python2.7 \
-          -D PYTHON2_INCLUDE_DIR=/usr/include/python2.7 \
-          -D PYTHON2_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpython2.7.so \
-          -D PYTHON2_PACKAGES_PATH=/usr/local/lib/python2.7/dist-packages \
           -D PYTHON2_NUMPY_INCLUDE_DIRS=/usr/lib/python2.7/dist-packages/numpy/core/include/ \
 
+          -D PYTHON2_EXECUTABLE=$(which python2.7) \
+          -D PYTHON2_INCLUDE_DIR=$(python2.7 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
+          -D PYTHON2_PACKAGES_PATH=$(python2.7 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())") \
+          -D PYTHON2_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpython2.7.so \
+          -D PYTHON2_NUMPY_INCLUDE_DIRS=$(python2.7 -c "from os import path; import numpy; print(path.join(path.split(numpy.__file__)[0], 'numpy', 'core', 'include'))") \
+
           -D BUILD_opencv_python3=ON \
-          -D PYTHON3_EXECUTABLE=/usr/bin/python3.4 \
-          -D PYTHON3_INCLUDE_DIR=/usr/include/python3.4/ \
+          -D PYTHON3_EXECUTABLE=$(which python3.4) \
+          -D PYTHON3_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
+          -D PYTHON3_PACKAGES_PATH=$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())") \
           -D PYTHON3_LIBRARIES=/usr/lib/python3.4/config-3.4m-x86_64-linux-gnu/libpython3.4.so \
-          -D PYTHON3_PACKAGES_PATH=/usr/local/lib/python3.4/dist-packages \
-          -D PYTHON3_PACKAGES_PATH=/usr/local/lib/python3.4/dist-packages/numpy/core/include \
+          -D PYTHON3_NUMPY_INCLUDE_DIRS=$(python3.4 -c "from os import path; import numpy; print(path.join(path.split(numpy.__file__)[0], 'numpy', 'core', 'include'))") \
           .. && \
       make -j8
 
 RUN make install && \
     ldconfig
 
-RUN python -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))"
+ENV PYTHONPATH $PYTHONPATH:$(python2.7 -c "import site;print(site.getsitepackages()[0])")
+ENV PYTHONPATH $PYTHONPATH:$(python3.4 -c "import site;print(site.getsitepackages()[0])")
+
+RUN cp /usr/local/src/opencv/build/lib/cv2.so $(python2 -c "import site; print(site.getsitepackages()[0])")/cv2.so && \
+    cp /usr/local/src/opencv/build/lib/python3/cv2.cpython-34m.so $(python3 -c "import site; print(site.getsitepackages()[0])")/cv2.so
+
+# RUN cp /usr/local/src/opencv/build/lib/cv2.so /usr/local/lib/python2.7/ && \
+    # cp /usr/local/src/opencv/build/lib/cv2.so /usr/local/lib/python3.4/
+RUN python2.7 -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))"
+RUN python3.4 -c "import cv2; print('cv2.__version__ = ' + str(cv2.__version__))"
 
 
 #######################
