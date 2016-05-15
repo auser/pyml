@@ -101,7 +101,7 @@ RUN wget http://www.leptonica.org/source/leptonica-${LEPTONICA_VERSION}.tar.gz -
     cd leptonica-${LEPTONICA_VERSION} && \
     ./configure && \
     make -j ${NUM_CORES} && \
-    checkinstall && \
+    make install && \
     ldconfig
 
 #######################
@@ -123,6 +123,7 @@ RUN tar -zxvf $INSTALL_ROOT/tesseract.tar.gz && \
     /bin/bash ./autogen.sh && \
     ./configure && \
     LDFLAGS="-L/usr/local/lib" CFLAGS="-I/usr/local/include" make -j ${NUM_CORES} && \
+    make install && \
     ldconfig
 
 #######################
