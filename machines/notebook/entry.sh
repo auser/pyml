@@ -1,10 +1,12 @@
 #!/bin/bash
 
 USER_UID=${USER_UID:-2000}
-USER_LOGIN=${USER:-compute}
+USER_LOGIN=${USER:-jovyan}
 USER_FULL_NAME="${USER_FULL_NAME:-Compute container user}"
 USER_DIR="/home/${USER_LOGIN}"
 PASSWORD=${PASSWORD:-itsginger}
+
+NOTEBOOK_PORT=${PORT:-8888}
 
 JDIR="${USER_DIR}/.jupyter"
 CONF_FILE="${JDIR}/jupyter_notebook_config.py"
@@ -20,14 +22,12 @@ echo "Creating user ${USER_LOGIN} (${USER_UID}:${USER_GID})..."
 id -u $USER_LOGIN &>/dev/null || adduser --disabled-password \
         --home "${USER_DIR}" \
         --uid "${USER_UID}" \
+        --create-home \
         --gecos "${USER_FULL_NAME},,," "${USER_LOGIN}" >/dev/null
 # adduser "${USER_LOGIN}" compute-users
 
 # chown -R $USER_LOGIN $USER_DIR
 IPY_DIR=$(ipython locate)
-
-ls -la $IPY_DIR
-cd "${USER_DIR}"
 
 ## Create the config
 # SSL cert
@@ -55,7 +55,7 @@ SPARK_HOME = os.environ['SPARK_HOME']
 
 c = get_config()
 c.NotebookApp.ip = '0.0.0.0'
-c.NotebookApp.port = 8888
+c.NotebookApp.port = ${NOTEBOOK_PORT}
 c.NotebookApp.port_retries = 249
 c.NotebookApp.enable_mathjax = True
 c.NotebookApp.open_browser = False
@@ -82,12 +82,13 @@ c.InteractiveShell.xmode = 'Context'
 
 # c.IPKernelApp.pylab = 'inline'
 c.InteractiveShellApp.matplotlib = 'inline'
-c.NotebookApp.notebook_dir = os.path.expanduser('~/notebooks/')
+# c.NotebookApp.notebook_dir = os.path.expanduser('~/notebooks/')
+c.NotebookApp.notebook_dir = os.path.expanduser('${NOTEBOOK_DIR}')
 EOF
 
 # chown -R $USER_LOGIN $(dirname $(ipython locate profile))
 
 # jupyter
 SUDO="sudo"
-# HOME="${USER_DIR}" $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"}
-HOME="${USER_DIR}" /bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"
+HOME="${USER_DIR}" $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"}
+# HOME="${USER_DIR}" /bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"

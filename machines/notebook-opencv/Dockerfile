@@ -233,8 +233,8 @@ RUN rm -rf /usr/local/src/leptonica && \
     apt-get clean -yq
 
 # USER compute
-RUN mkdir /data
-WORKDIR /data
+RUN mkdir /notebooks
+WORKDIR /notebooks
 
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
