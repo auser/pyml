@@ -1,3 +1,0 @@
-# compute users have local sudo access
-%compute-users ALL = NOPASSWD: ALL
-
