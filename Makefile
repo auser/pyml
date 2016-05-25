@@ -6,7 +6,8 @@ include .env
 
 .PHONY: build-all help environment-check release-all
 
-ALL_STACKS:=notebook-opencv
+ALL_STACKS:=base
+	# notebook-opencv
 # ALL_STACKS:=python23 \
 	# spark \
 	# opencv \
