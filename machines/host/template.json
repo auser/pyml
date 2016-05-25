@@ -1,0 +1,153 @@
+{
+    "variables": {
+        "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+        "aws_secret_key": "{{env `AWS_SECURE_ACCESS_KEY`}}",
+        "spot_price": "0.09"
+    },
+    "provisioners": [{
+        "type": "shell",
+        "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+        "override": {
+            "virtualbox-iso": {
+                "scripts": [
+                    "scripts/base.sh",
+                    "scripts/vagrant.sh",
+                    "scripts/virtualbox.sh",
+                    "scripts/cuda.sh",
+                    "scripts/cleanup.sh",
+                    "scripts/zerodisk.sh",
+                    "scripts/reboot.sh"
+                ]
+            },
+            "amazon-ebs": {
+                "scripts": [
+                    "scripts/base.sh",
+                    "scripts/cuda.sh",
+                    "scripts/cleanup.sh",
+                    "scripts/zerodisk.sh",
+                    "scripts/reboot.sh"
+                ]
+            }
+        }
+    }],
+    "post-processors": [{
+        "type": "shell-local",
+        "inline": [
+            "echo \"FROM boot2docker/boot2docker\" > Dockerfile",
+            "echo \"RUN /make_iso.sh\" >> Dockerfile",
+            "echo 'CMD [\"cat\", \"boot2docker.iso\"]' >> Dockerfile",
+            "docker build -t my-boot2docker-img .",
+            "docker run --rm my-boot2docker-img > boot2docker.iso"
+        ]
+    }, {
+        "output": "builds/{{.Provider}}-ubuntu1404.box",
+        "type": "vagrant"
+    }],
+    "builders": [{
+        "type": "virtualbox-iso",
+        "boot_command": [
+            "<esc><wait>",
+            "<esc><wait>",
+            "<enter><wait>",
+            "/install/vmlinuz",
+            " auto=true",
+            " priority=critical",
+            " initrd=/install/initrd.gz",
+            " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
+            " -- ",
+            "<enter>"
+        ],
+        "boot_wait": "10s",
+        "disk_size": 81920,
+        "guest_os_type": "Ubuntu_64",
+        "headless": true,
+        "http_directory": "http",
+        "iso_urls": [
+            "iso/ubuntu-14.04.4-server-amd64.iso",
+            "http://releases.ubuntu.com/14.04/ubuntu-14.04.4-server-amd64.iso"
+        ],
+        "iso_checksum_type": "md5",
+        "iso_checksum": "2ac1f3e0de626e54d05065d6f549fa3a",
+        "ssh_username": "vagrant",
+        "ssh_password": "vagrant",
+        "ssh_port": 22,
+        "ssh_wait_timeout": "10000s",
+        "shutdown_command": "echo 'vagrant'|sudo -S shutdown -P now",
+        "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+        "virtualbox_version_file": ".vbox_version",
+        "vm_name": "packer-ubuntu-14.04-amd64",
+        "vboxmanage": [
+            [
+                "modifyvm",
+                "{{.Name}}",
+                "--memory",
+                "512"
+            ],
+            [
+                "modifyvm",
+                "{{.Name}}",
+                "--cpus",
+                "2"
+            ]
+        ]
+    }, {
+        "type": "vmware-iso",
+        "boot_command": [
+            "<esc><wait>",
+            "<esc><wait>",
+            "<enter><wait>",
+            "/install/vmlinuz",
+            " auto=true",
+            " priority=critical",
+            " initrd=/install/initrd.gz",
+            " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
+            " -- ",
+            "<enter>"
+        ],
+        "boot_wait": "10s",
+        "disk_size": 81920,
+        "guest_os_type": "ubuntu-64",
+        "headless": true,
+        "http_directory": "http",
+        "iso_urls": [
+            "iso/ubuntu-14.04.4-server-amd64.iso",
+            "http://releases.ubuntu.com/14.04/ubuntu-14.04.4-server-amd64.iso"
+        ],
+        "iso_checksum_type": "md5",
+        "iso_checksum": "2ac1f3e0de626e54d05065d6f549fa3a",
+        "output_directory": "packer-ubuntu-14.04-amd64-vmware",
+        "shutdown_command": "echo 'vagrant'|sudo -S shutdown -P now",
+        "ssh_password": "vagrant",
+        "ssh_port": 22,
+        "ssh_username": "vagrant",
+        "ssh_wait_timeout": "10000s",
+        "tools_upload_flavor": "linux",
+        "vm_name": "packer-ubuntu-14.04-amd64",
+        "vmx_data": {
+            "cpuid.coresPerSocket": "1",
+            "memsize": "512",
+            "numvcpus": "2"
+        }
+    }, {
+        "type": "amazon-ebs",
+        "access_key": "{{user `aws_access_key`}}",
+        "secret_key": "{{user `aws_secret_key`}}",
+        "ami_name": "machine_learning_gpu {{timestamp}}",
+        "instance_type": "g2.2xlarge",
+        "region": "us-east-1",
+        "source_ami": "ami-d05e75b8",
+        "ssh_username": "ubuntu",
+        "ami_block_device_mappings": [{
+            "device_name": "/dev/sda1",
+            "volume_type": "gp2",
+            "delete_on_termination": true,
+            "volume_size": 24
+        }],
+        "launch_block_device_mappings": [{
+            "device_name": "/dev/sda1",
+            "volume_type": "gp2",
+            "delete_on_termination": true,
+            "volume_size": 24
+        }]
+    }]
+}

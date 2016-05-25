@@ -1,0 +1,71 @@
+FROM auser/cuda-base
+
+# ENV THEANO_VERSION 0743dbc0f6e915e300b94bd354972272fa3a525e
+# ENV TENSORFLOW_VERSION 0.7.1
+# ENV TENSORFLOW_ARCH cpu
+# ENV KERAS_VERSION 8ba647c19641bbcf8c742e01446ad10a55514846
+
+# Install dependencies
+# RUN apt-get update && apt-get install -y \
+#         curl \
+#         vim \
+#         libfreetype6-dev \
+#         libpng12-dev \
+#         libzmq3-dev \
+#         pkg-config \
+#         python-dev \
+#         python-pip \
+#         gfortran \
+#         libopenblas-dev \
+#         libatlas-base-dev \
+#         libssl-dev \
+#         libffi-dev \
+#         libhdf5-dev \
+#         git \
+#         unzip \
+#         nano \
+#         && \
+#     apt-get clean && \
+#     rm -rf /var/lib/apt/lists/*
+#
+# # Install pip
+# RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
+#     python get-pip.py && \
+#     rm get-pip.py
+#
+# # Add SNI support to Python
+# RUN pip --no-cache-dir install \
+#         pyopenssl \
+#         ndg-httpsclient \
+#         pyasn1
+#
+# # Scipy takes a while to install, so doing so in a separate layer from other pip packages
+# RUN pip --no-cache-dir install \
+#         numpy \
+#         scipy
+#
+# RUN pip --no-cache-dir install \
+#         pandas \
+#         sklearn \
+#         matplotlib \
+#         h5py \
+#         Pillow \
+#         ipdb
+#
+# # Install Theano
+# RUN pip --no-cache-dir install git+git://github.com/Theano/Theano.git@${THEANO_VERSION}
+#
+# # Setup Theano
+# ADD bin/* /root/
+# ADD etc/theanorc /root/.theanorc
+#
+# # Install TensorFlow
+# RUN pip --no-cache-dir install \
+#     https://storage.googleapis.com/tensorflow/linux/${TENSORFLOW_ARCH}/tensorflow-${TENSORFLOW_VERSION}-cp27-none-linux_x86_64.whl
+#
+# # Install Keras
+# RUN pip --no-cache-dir install git+git://github.com/fchollet/keras.git@${KERAS_VERSION}
+#
+# WORKDIR "/root"
+#
+# CMD ["/bin/bash"]

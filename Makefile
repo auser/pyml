@@ -1,4 +1,8 @@
-OWNER=auser
+OWNER:=auser
+ARGS?=
+DARGS?=
+
+include .env
 
 .PHONY: build-all help environment-check release-all
 
@@ -13,40 +17,32 @@ ALL_STACKS:=notebook-opencv
 	# torch \
 
 ALL_IMAGES:=$(ALL_STACKS)
-
 MACHINES_DIR := machines
+
+# build/cuda-base:
+	# docker build $(DARGS) --rm --force-rm -t $(OWNER)/cuda-base:latest -f machines/base/Dockerfile-cuda-7.5-cudnn4-devel machines/base
+
+lib= ./$(MACHINES_DIR)/base
+dockerfile: $(lib)/stages/*.m4
+	@m4 -I $(lib)/stages -I $(lib) $(lib)/Dockerfile.m4 > Dockerfile.build
+	@env | j2 --format=env Dockerfile.build > $(lib)/Dockerfile
+	@rm Dockerfile.build
+
+test_build: dockerfile
+	docker build --rm --force-rm $(lib)
+
+vb_build:
+	cd $(MACHINES_DIR)/host && packer build --only=virtualbox-iso ./template.json
 
 build/%: DARGS?=
 
 MACHINE_PATH := $(subst build/,,,$@)
-
 GIT_MASTER_HEAD_SHA:=$(shell git rev-parse --short=12 --verify HEAD)
-
 
 build-all: $(patsubst %,build/%, $(ALL_IMAGES))
 
 build/%:
 	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest ./machines/$(notdir $@)
-
-dev/%: ARGS?=
-dev/%: DARGS?=
-dev/%: PORT?=8888
-dev/%: HOST_PORT?=$(PORT)
-dev/%:
-	docker run -it --rm -p $(PORT):$(HOST_PORT) $(DARGS) $(OWNER)/$(notdir $@) $(ARGS)
-
-push/%:
-	docker push $(OWNER)/$(notdir $@):latest
-	docker push $(OWNER)/$(notdir $@):$(GIT_MASTER_HEAD_SHA)
-
-push-all: $(patsubst %,push/%, $(ALL_IMAGES))
-
-tag/%:
-# always tag the latest build with the git sha
-	docker tag -f $(OWNER)/$(notdir $@):latest $(OWNER)/$(notdir $@):$(GIT_MASTER_HEAD_SHA)
-
-tag-all: $(patsubst %,tag/%, $(ALL_IMAGES))
-
 
 up:
 	docker-compose -p pydock up -d
@@ -64,4 +60,5 @@ script:
 	go build -o scripts/boot scripts/boot.go
 
 clean:
-	docker-cleanup
+	rm -rf output-*
+	rm -rf *.box

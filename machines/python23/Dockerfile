@@ -1,5 +1,5 @@
 # FROM jupyter/minimal-notebook
-FROM auser/cuda
+FROM auser/base
 # FROM nvidia/cuda:7.5-cudnn4-devel
 
 USER root
@@ -7,7 +7,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 ENV CONDA_DIR /opt/conda
 # Configure environment
-ENV D_USER compute
+ENV D_USER jovyan
 ENV D_UID 1000
 
 RUN useradd -m -s /bin/bash -N -u $D_UID $D_USER
@@ -37,32 +37,32 @@ RUN apt-get install -y curl grep sed dpkg && \
 ENV PATH /opt/conda/bin:$PATH
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
-USER compute
+USER jovyan
 
 # Install Python 3 packages
 RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4
 RUN $CONDA_DIR/bin/conda create --quiet --yes -n py2 python=2.7
 
-RUN source activate py3 && \
-  $CONDA_DIR/bin/conda install --yes \
-    'ipywidgets=4.1*' \
-    'pandas=0.17*' \
-    'numexpr=2.5*' \
-    'matplotlib=1.5*' \
-    'scipy=0.17*' \
-    'seaborn=0.7*' \
-    'scikit-learn=0.17*' \
-    'scikit-image=0.11*' \
-    'sympy=0.7*' \
-    'cython=0.23*' \
-    'patsy=0.4*' \
-    'statsmodels=0.6*' \
-    'cloudpickle=0.1*' \
-    'dill=0.2*' \
-    'numba=0.23*' \
-    'bokeh=0.11*' \
-    'h5py=2.5*' \
-    && /opt/conda/bin/conda clean -tipsy
+# RUN source activate py3 && \
+#   $CONDA_DIR/bin/conda install --yes \
+#     'ipywidgets=4.1*' \
+#     'pandas=0.17*' \
+#     'numexpr=2.5*' \
+#     'matplotlib=1.5*' \
+#     'scipy=0.17*' \
+#     'seaborn=0.7*' \
+#     'scikit-learn=0.17*' \
+#     'scikit-image=0.11*' \
+#     'sympy=0.7*' \
+#     'cython=0.23*' \
+#     'patsy=0.4*' \
+#     'statsmodels=0.6*' \
+#     'cloudpickle=0.1*' \
+#     'dill=0.2*' \
+#     'numba=0.23*' \
+#     'bokeh=0.11*' \
+#     'h5py=2.5*' \
+#     && /opt/conda/bin/conda clean -tipsy
 
 # Install bleeding-edge Theano
 # RUN source activate root && \
@@ -81,28 +81,28 @@ RUN source activate py3 && \
 
 # Install Python 2 packages
 
-RUN source activate py2 && \
-  $CONDA_DIR/bin/conda install --quiet --yes \
-    'ipython=4.1*' \
-    'ipywidgets=4.1*' \
-    'pandas=0.17*' \
-    'numexpr=2.5*' \
-    'matplotlib=1.5*' \
-    'scipy=0.17*' \
-    'seaborn=0.7*' \
-    'scikit-learn=0.17*' \
-    'scikit-image=0.11*' \
-    'sympy=0.7*' \
-    'cython=0.23*' \
-    'patsy=0.4*' \
-    'statsmodels=0.6*' \
-    'cloudpickle=0.1*' \
-    'dill=0.2*' \
-    'numba=0.23*' \
-    'bokeh=0.11*' \
-    'h5py=2.5*' \
-    'pyzmq' \
-    && $CONDA_DIR/bin/conda clean -tipsy
+# RUN source activate py2 && \
+#   $CONDA_DIR/bin/conda install --quiet --yes \
+#     'ipython=4.1*' \
+#     'ipywidgets=4.1*' \
+#     'pandas=0.17*' \
+#     'numexpr=2.5*' \
+#     'matplotlib=1.5*' \
+#     'scipy=0.17*' \
+#     'seaborn=0.7*' \
+#     'scikit-learn=0.17*' \
+#     'scikit-image=0.11*' \
+#     'sympy=0.7*' \
+#     'cython=0.23*' \
+#     'patsy=0.4*' \
+#     'statsmodels=0.6*' \
+#     'cloudpickle=0.1*' \
+#     'dill=0.2*' \
+#     'numba=0.23*' \
+#     'bokeh=0.11*' \
+#     'h5py=2.5*' \
+#     'pyzmq' \
+#     && $CONDA_DIR/bin/conda clean -tipsy
 
 # Install Python 2 kernel spec globally to avoid permission problems when NB_UID
 # switching at runtime.
@@ -112,17 +112,27 @@ RUN source activate py2 && \
 ADD requirements.txt /tmp/requirements.txt
 RUN source activate py2 && \
     pip install --upgrade --user \
-      -r /tmp/requirements.txt
+      -r /tmp/requirements.txt && \
+    conda install notebook ipykernel && \
+    ipython kernel install --user
+
 RUN source activate py3 && \
     pip install \
       --no-cache-dir --upgrade --user \
-      -r /tmp/requirements.txt
+      -r /tmp/requirements.txt && \
+    conda install notebook ipykernel && \
+    ipython kernel install --user
+
+COPY setup-jupyter-kernels.sh /tmp/setup-jupyter-kernels.sh
+RUN chmod a+x /tmp/setup-jupyter-kernels.sh && \
+    /bin/bash /tmp/setup-jupyter-kernels.sh && \
+    rm /tmp/setup-jupyter-kernels.sh
 
 USER root
 RUN rm /tmp/requirements.txt
 # ## CLEAN UP
 RUN apt-get clean autoclean -yq && apt-get autoremove -yq
-USER compute
+USER root
 #     rm -rf /tmp/* /var/tmp/* \
 #     rm -rf /var/lib/apt/lists/*
 # ## CLEAN UP

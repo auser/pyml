@@ -1,5 +1,4 @@
 pandas
-scikit-learn
 matplotlib
 seaborn
 h5py
@@ -15,3 +14,4 @@ https://github.com/Lasagne/Lasagne/archive/master.zip
 bokeh
 mock
 pytest
+scikit-learn

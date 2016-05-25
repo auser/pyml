@@ -7,19 +7,17 @@ ENV TESSERACT_VERSION 3.04.00
 ENV LEPTONICA_VERSION 1.73
 ENV FFMPEG_VERSION v0.6.1
 
-ENV LD_LIBRARY_PATH /usr/local/lib
+ENV LD_LIBRARY_PATH /usr/local/lib:/usr/lib/nvidia-352
 ENV INSTALL_ROOT /usr/local/src
 ENV CUDA_ROOT /usr/local/cuda/bin
 ENV NUM_CORES 4
 
+COPY system-conf/etc/apt /etc/apt
+COPY system-conf/etc/ld.so.conf.d/ /etc/ld.so.conf.d
+
 RUN apt-get update -qq
 RUN apt-get install -yq \
     mktemp
-
-# Copy local configuration & fix perms
-COPY system-conf /
-# RUN chown -R root:root /etc/sudoers.d && chmod 0440 /etc/sudoers.d/*
-RUN addgroup compute-users
 
 #######################
 # OpenCV
@@ -84,7 +82,7 @@ RUN git clone --branch $OPENCV_VERSION --depth 1 https://github.com/Itseez/openc
     # git clone --branch $LEPTONICA_VERSION --depth 1 https://github.com/DanBloomberg/leptonica.git $INSTALL_ROOT/leptonica && \
     git clone --branch $FFMPEG_VERSION --depth 1 git://source.ffmpeg.org/ffmpeg $INSTALL_ROOT/ffmpeg
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda-7.5/lib64
 
 #######################
 # Tesseract
@@ -231,6 +229,11 @@ RUN rm -rf /usr/local/src/leptonica && \
     rm -rf /usr/local/src/tesseract && \
     rm -rf /usr/local/src/opencv && \
     apt-get clean -yq
+
+# Copy local configuration & fix perms
+COPY system-conf /
+# RUN chown -R root:root /etc/sudoers.d && chmod 0440 /etc/sudoers.d/*
+RUN addgroup compute-users
 
 # USER compute
 RUN mkdir /notebooks

@@ -1,0 +1,48 @@
+FROM nvidia/cuda:7.5-cudnn4-devel
+RUN apt-get update
+RUN apt-get install -y gcc g++ make cmake git-core libevent-dev libev-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+USER root
+
+# Install all OS dependencies for fully functional notebook server
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+    git \
+    vim \
+    wget \
+    build-essential \
+    ca-certificates \
+    bzip2 \
+    unzip \
+    libsm6 \
+    pandoc \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-fonts-extra \
+    texlive-fonts-recommended \
+    texlive-generic-recommended \
+    sudo \
+    locales \
+    libxrender1 \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configure environment
+ENV CONDA_DIR /opt/conda
+ENV PATH $CONDA_DIR/bin:$PATH
+ENV SHELL /bin/bash
+ENV NB_USER jovyan
+ENV NB_UID 1000
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+
+# Configure environment
+# Create jovyan user with UID=1000 and in the 'users' group
+RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
+    mkdir -p /opt/conda && \
+    chown jovyan /opt/conda
+
+RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER

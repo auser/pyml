@@ -25,6 +25,8 @@ PROVIDER="virtualbox"
 CLUSTER_PREFIX="fs"
 NET_NAME="${CLUSTER_PREFIX}-net"
 
+SPOT_PRICE=
+
 function HELP {
   e_header "Help documentation"
   e_log "Usage: $0 [options]"
@@ -35,13 +37,14 @@ function HELP {
   e_log "-d" "dry run. Default: ${DRY_RUN}"
   e_log "-y" "skip confirmation. Default: ${SKIP_CONFIRMATION}"
   e_log "-n" "name. Default is: ${CLUSTER_PREFIX}"
+  e_log "-t" "request spot price. Default: ${SPOT_PRICE}"
   e_log "-h" "Display this help message\n"
   e_log
 
   exit 1
 }
 
-while getopts :vdhp:ys:c FLAG; do
+while getopts :vdhp:ys:ct: FLAG; do
   case $FLAG in
     v) VERBOSE=true
         ;;
@@ -54,6 +57,8 @@ while getopts :vdhp:ys:c FLAG; do
     n) CLUSTER_PREFIX="$OPTARG"
         ;;
     s) NUM_NODES=$OPTARG
+        ;;
+    t) SPOT_PRICE="$OPTARG"
         ;;
     p)
         if [[ "$OPTARG" != "aws" &&
@@ -99,9 +104,19 @@ elif [[ $PROVIDER == "aws" ]]; then
                   --amazonec2-region $AWS_REGION \
                   --amazonec2-vpc-id ${AWS_VPC_ID}"
                   # --amazonec2-subnet-id $AWS_SUBNET_ID \
+
+  if [[ ! -z "$SPOT_PRICE" ]]; then
+    echo "HERE $SPOT_PRICE"
+    DRIVER_OPTIONS="$DRIVER_OPTIONS \
+                    --amazonec2-request-spot-instance \
+                    --amazonec2-spot-price $SPOT_PRICE"
+  fi
 else
   echo "Error"
 fi
+
+echo "DRIVER: $DRIVER_OPTIONS"
+exit 0
 
 e_debug e_header "Creating multihost keystore"
 getName keystoreName "keystore"
