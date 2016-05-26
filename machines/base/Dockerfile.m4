@@ -24,3 +24,8 @@ include(`ffmpeg.m4')
 include(`opencv.m4')
 
 USER {{ NB_USER }}
+
+EXPOSE 8888
+COPY entry.sh /opt/compute-container/entry.sh
+RUN chmod +x /opt/compute-container/entry.sh
+CMD ["/opt/compute-container/entry.sh"]
