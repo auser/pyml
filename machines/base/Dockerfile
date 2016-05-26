@@ -42,7 +42,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
 # Create compute user with UID=1000 and in the 'users' group
-RUN useradd -m -s /bin/bash -k SKEL=/etc/skel -u $NB_UID $NB_USER && \
+RUN useradd -m -s /bin/bash -u $NB_UID $NB_USER && \
     mkdir -p $CONDA_DIR && \
     chown $NB_USER $CONDA_DIR
 
@@ -283,11 +283,12 @@ COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
 WORKDIR /opt/compute-container
 
-RUN source activate py2 && \
-    pip install notebook --upgrade
+RUN source activate py2 && pip install notebook --upgrade && \
+    source activate py3 && pip install notebook --upgrade
 
 ENV USER compute
 ENV USER_UID 1000
 ENV PATH $PATH:~/.local/bin
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:${PY2_DIR}/lib:${PY3_DIR}/lib:/usr/local/cuda/lib:/usr/local/cuda/lib64
 
 CMD ["/opt/compute-container/entry.sh"]

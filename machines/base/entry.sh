@@ -14,7 +14,7 @@ CONF_FILE="${JDIR}/jupyter_notebook_config.py"
 NOTEBOOK_DIR="${USER_DIR}/notebooks"
 PASSWORD_FILE=${JDIR}/.pass
 
-LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/include:/usr/local/lib:/usr/local/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib:/usr/lib/nvidia-352
+LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/include:/usr/local/lib:/usr/local/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib:$LD_LIBRARY_PATH
 
 ##### Working stuff
 echo "ID: $(id -u ${USER_LOGIN} 2>/dev/null)"
@@ -26,6 +26,16 @@ if [[ ! $(id -u ${USER_LOGIN} 2>/dev/null) ]]; then
           --uid ${USER_UID} \
           "${USER_LOGIN}" >/dev/null
 fi
+
+echo<<EOF  | tee /home/${USER_LOGIN}/.theanorc
+[global]
+device = gpu
+floatX = float32
+optimizer_including=cudnn
+
+[lib]
+cnmem=0.9
+EOF
 
 # cp -r ~/.local ${USER_DIR}/.local
 # chown -R ${USER_LOGIN} ${USER_DIR}/.local
@@ -99,6 +109,5 @@ SUDO="sudo"
 (
 export HOME="${USER_DIR}"
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
-$SUDO -E -u ${USER_LOGIN} /bin/bash --login -c "source activate py2 && which jupyter"
 $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "source activate py2 && jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > ${USER_DIR}/jupyter.log 2>&1"}
 )

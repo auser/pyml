@@ -42,7 +42,7 @@ GIT_MASTER_HEAD_SHA:=$(shell git rev-parse --short=12 --verify HEAD)
 
 build-all: $(patsubst %,build/%, $(ALL_IMAGES))
 
-build/%:
+build/%: dockerfile
 	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest ./machines/$(notdir $@)
 
 up:

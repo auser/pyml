@@ -31,11 +31,12 @@ COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
 WORKDIR /opt/compute-container
 
-RUN source activate py2 && \
-    pip install notebook --upgrade
+RUN source activate py2 && pip install notebook --upgrade && \
+    source activate py3 && pip install notebook --upgrade
 
 ENV USER {{ NB_USER }}
 ENV USER_UID {{ NB_UID }}
 ENV PATH $PATH:~/.local/bin
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:${PY2_DIR}/lib:${PY3_DIR}/lib:/usr/local/cuda/lib:/usr/local/cuda/lib64
 
 CMD ["/opt/compute-container/entry.sh"]
