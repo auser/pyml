@@ -26,4 +26,10 @@ include(`opencv.m4')
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
-CMD ["/opt/compute-container/entry.sh", "USER={{ USER }}"]
+
+ENV USER {{ USER }}
+ENV USER_UID {{ USER_UID }}
+ENV PATH $PATH:~/.local/bin
+
+WORKDIR ~/notebooks
+CMD ["/opt/compute-container/entry.sh"]

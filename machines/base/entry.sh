@@ -5,6 +5,7 @@ USER_LOGIN=${USER:-jovyan}
 USER_FULL_NAME="${USER_FULL_NAME:-Compute container user}"
 USER_DIR="/home/${USER_LOGIN}"
 PASSWORD=${PASSWORD:-itsginger}
+PYTHON_ENV=${PYTHON_ENV:-py2}
 
 NOTEBOOK_PORT=${PORT:-8888}
 
