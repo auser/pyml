@@ -26,13 +26,16 @@ include(`opencv.m4')
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
+WORKDIR /opt/compute-container
 
-RUN ln -s $HOME/.local/ ~{{ NB_USER }}/.local && \
-    chown -R {{ NB_USER }} ~{{ NB_USER }}/.local
+RUN source activate py2 && \
+    pip install notebook --upgrade
+
+RUN cp -r $HOME/.local/ ~{{ NB_USER }}/.local && \
+    chown -R {{ NB_USER }}:users ~{{ NB_USER }}/.local
 
 ENV USER {{ NB_USER }}
 ENV USER_UID {{ NB_UID }}
 ENV PATH $PATH:~/.local/bin
 
-WORKDIR $HOME
 CMD ["/opt/compute-container/entry.sh"]

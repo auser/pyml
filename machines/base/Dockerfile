@@ -265,13 +265,13 @@ RUN source activate py3 && \
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
+WORKDIR /opt/compute-container
 
-RUN ln -s $HOME/.local/ ~compute/.local && \
-    chown -R compute ~compute/.local
+RUN cp -r $HOME/.local/ ~compute/.local && \
+    chown -R compute:users ~compute/.local
 
 ENV USER compute
 ENV USER_UID 1000
 ENV PATH $PATH:~/.local/bin
 
-WORKDIR $HOME
 CMD ["/opt/compute-container/entry.sh"]

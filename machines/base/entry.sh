@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 USER_UID=${USER_UID:-1001}
 USER_LOGIN=${USER:-jovyan}
@@ -17,8 +17,9 @@ PASSWORD_FILE=${JDIR}/.pass
 LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/include:/usr/local/lib:/usr/local/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib:/usr/lib/nvidia-352
 
 ##### Working stuff
-echo "Creating user ${USER_LOGIN} (${USER_UID}:${USER_GID})..."
-if [[ ! $(id -u $USER_LOGIN &>/dev/null) ]]; then
+echo "ID: $(id -u ${USER_LOGIN} 2>/dev/null)"
+if [[ ! $(id -u ${USER_LOGIN} 2>/dev/null) ]]; then
+  echo "Creating user ${USER_LOGIN} (${USER_UID}:${USER_GID})..."
   useradd --home "${USER_DIR}" \
           --shell "/bin/bash" \
           --create-home \
@@ -26,8 +27,8 @@ if [[ ! $(id -u $USER_LOGIN &>/dev/null) ]]; then
           "${USER_LOGIN}" >/dev/null
 fi
 
-cp -r ~/.local ${USER_DIR}/.local
-chown -R ${USER_LOGIN} ${USER_DIR}/.local
+# cp -r ~/.local ${USER_DIR}/.local
+# chown -R ${USER_LOGIN} ${USER_DIR}/.local
 
 mkdir -p -m 700 ${USER_DIR}
 mkdir -p -m 700 ${JDIR}/security
@@ -50,7 +51,6 @@ import sys
 
 os.environ['SHELL'] = '/bin/bash'
 os.environ['PYTHONPATH'] = '$PYTHONPATH:$NOTEBOOK_DIR'
-os.environ['PATH'] = '$PATH:~/.local/bin'
 
 # Configure the environment
 os.environ['SPARK_HOME'] = '${SPARK_HOME}'
@@ -94,9 +94,11 @@ c.InteractiveShellApp.matplotlib = 'inline'
 c.NotebookApp.notebook_dir = os.path.expanduser('${NOTEBOOK_DIR}')
 EOF
 
-# chown -R $USER_LOGIN $(dirname $(ipython locate profile))
-
 # jupyter
 SUDO="sudo"
-HOME="${USER_DIR}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > ${USER_DIR}/jupyter.log 2>&1"}
-# HOME="${USER_DIR}" /bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"
+(
+export HOME="${USER_DIR}"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+$SUDO -E -u ${USER_LOGIN} /bin/bash --login -c "source activate py2 && which jupyter"
+$SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "source activate py2 && jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > ${USER_DIR}/jupyter.log 2>&1"}
+)

@@ -44,15 +44,15 @@ RUN source activate py2 && \
     'cython=0.23*' \
     'numpy' \
     'statsmodels' && \
-    pip install --upgrade --user ipykernel && \
-    pip install --upgrade --user -r /tmp/requirements.txt
+    pip install --upgrade ipykernel jupyter notebook && \
+    pip install --upgrade -r /tmp/requirements.txt
 
 RUN source activate py3 && \
     $CONDA_DIR/bin/conda install --yes \
     'cython=0.23*' \
     'numpy' \
     'statsmodels' && \
-    pip install --upgrade --user ipykernel && \
-    pip install --upgrade --user -r /tmp/requirements.txt
+    pip install --upgrade ipykernel jupyter notebook && \
+    pip install --upgrade -r /tmp/requirements.txt
 
 RUN cp -r $HOME/.conda /etc/skel/.conda
