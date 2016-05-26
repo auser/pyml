@@ -45,6 +45,7 @@ RUN source activate py2 && \
     'numpy' \
     'statsmodels' && \
     pip install --upgrade ipykernel jupyter notebook && \
+    ipython kernel install && \
     pip install --upgrade -r /tmp/requirements.txt
 
 RUN source activate py3 && \
@@ -53,6 +54,7 @@ RUN source activate py3 && \
     'numpy' \
     'statsmodels' && \
     pip install --upgrade ipykernel jupyter notebook && \
+    ipython kernel install && \
     pip install --upgrade -r /tmp/requirements.txt
 
 RUN cp -r $HOME/.conda /etc/skel/.conda

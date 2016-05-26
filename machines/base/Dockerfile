@@ -94,16 +94,18 @@ RUN source activate py2 && \
     'cython=0.23*' \
     'numpy' \
     'statsmodels' && \
-    pip install --upgrade --user ipykernel && \
-    pip install --upgrade --user -r /tmp/requirements.txt
+    pip install --upgrade ipykernel jupyter notebook && \
+    ipython kernel install && \
+    pip install --upgrade -r /tmp/requirements.txt
 
 RUN source activate py3 && \
     $CONDA_DIR/bin/conda install --yes \
     'cython=0.23*' \
     'numpy' \
     'statsmodels' && \
-    pip install --upgrade --user ipykernel && \
-    pip install --upgrade --user -r /tmp/requirements.txt
+    pip install --upgrade ipykernel jupyter notebook && \
+    ipython kernel install && \
+    pip install --upgrade -r /tmp/requirements.txt
 
 RUN cp -r $HOME/.conda /etc/skel/.conda
 
@@ -262,13 +264,16 @@ RUN source activate py3 && \
 #######################
 
 
+## Torch
+
+
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
 WORKDIR /opt/compute-container
 
-RUN cp -r $HOME/.local/ ~compute/.local && \
-    chown -R compute:users ~compute/.local
+RUN source activate py2 && \
+    pip install notebook --upgrade
 
 ENV USER compute
 ENV USER_UID 1000

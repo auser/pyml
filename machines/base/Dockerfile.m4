@@ -23,6 +23,8 @@ include(`ffmpeg.m4')
 
 include(`opencv.m4')
 
+include(`torch.m4')
+
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
@@ -30,9 +32,6 @@ WORKDIR /opt/compute-container
 
 RUN source activate py2 && \
     pip install notebook --upgrade
-
-RUN cp -r $HOME/.local/ ~{{ NB_USER }}/.local && \
-    chown -R {{ NB_USER }}:users ~{{ NB_USER }}/.local
 
 ENV USER {{ NB_USER }}
 ENV USER_UID {{ NB_UID }}

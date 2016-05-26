@@ -37,7 +37,7 @@ mkdir -p -m 700 ${NOTEBOOK_DIR}
 # adduser "${USER_LOGIN}" compute-users
 
 chown -R $USER_LOGIN $USER_DIR
-IPY_DIR=$(ipython locate)
+IPY_DIR=${NOTEBOOK_DIR}
 
 ## Create the config
 # SSL cert
