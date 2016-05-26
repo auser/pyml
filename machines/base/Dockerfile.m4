@@ -24,6 +24,7 @@ include(`ffmpeg.m4')
 include(`opencv.m4')
 
 include(`torch.m4')
+include(`tensorflow.m4')
 
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
