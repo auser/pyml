@@ -27,6 +27,9 @@ EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
 
+RUN ln -s $HOME/.local/ ~{{ NB_USER }}/.local && \
+    chown -R {{ NB_USER }} ~{{ NB_USER }}/.local
+
 ENV USER {{ NB_USER }}
 ENV USER_UID {{ NB_UID }}
 ENV PATH $PATH:~/.local/bin

@@ -42,7 +42,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
 # Create compute user with UID=1000 and in the 'users' group
-RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
+RUN useradd -m -s /bin/bash -k SKEL=/etc/skel -u $NB_UID $NB_USER && \
     mkdir -p $CONDA_DIR && \
     chown $NB_USER $CONDA_DIR
 
@@ -104,6 +104,8 @@ RUN source activate py3 && \
     'statsmodels' && \
     pip install --upgrade --user ipykernel && \
     pip install --upgrade --user -r /tmp/requirements.txt
+
+RUN cp -r $HOME/.conda /etc/skel/.conda
 
 
 RUN apt-get update -yq && apt-get install -yq gfortran
@@ -264,9 +266,12 @@ EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
 
+RUN ln -s $HOME/.local/ ~compute/.local && \
+    chown -R compute ~compute/.local
+
 ENV USER compute
 ENV USER_UID 1000
 ENV PATH $PATH:~/.local/bin
 
-WORKDIR ~/notebooks
+WORKDIR $HOME
 CMD ["/opt/compute-container/entry.sh"]

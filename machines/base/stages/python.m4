@@ -54,3 +54,5 @@ RUN source activate py3 && \
     'statsmodels' && \
     pip install --upgrade --user ipykernel && \
     pip install --upgrade --user -r /tmp/requirements.txt
+
+RUN cp -r $HOME/.conda /etc/skel/.conda
