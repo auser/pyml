@@ -26,6 +26,9 @@ if [[ ! $(id -u $USER_LOGIN &>/dev/null) ]]; then
           "${USER_LOGIN}" >/dev/null
 fi
 
+cp -r ~/.local ${USER_DIR}/.local
+chown -R ${USER_LOGIN} ${USER_DIR}/.local
+
 mkdir -p -m 700 ${USER_DIR}
 mkdir -p -m 700 ${JDIR}/security
 mkdir -p -m 700 ${NOTEBOOK_DIR}
@@ -47,6 +50,7 @@ import sys
 
 os.environ['SHELL'] = '/bin/bash'
 os.environ['PYTHONPATH'] = '$PYTHONPATH:$NOTEBOOK_DIR'
+os.environ['PATH'] = '$PATH:~/.local/bin'
 
 # Configure the environment
 os.environ['SPARK_HOME'] = '${SPARK_HOME}'

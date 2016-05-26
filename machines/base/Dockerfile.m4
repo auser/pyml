@@ -31,5 +31,5 @@ ENV USER {{ NB_USER }}
 ENV USER_UID {{ NB_UID }}
 ENV PATH $PATH:~/.local/bin
 
-WORKDIR ~/notebooks
+WORKDIR $HOME
 CMD ["/opt/compute-container/entry.sh"]
