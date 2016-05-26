@@ -27,8 +27,8 @@ EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
 
-ENV USER {{ USER }}
-ENV USER_UID {{ USER_UID }}
+ENV USER {{ NB_USER }}
+ENV USER_UID {{ NB_UID }}
 ENV PATH $PATH:~/.local/bin
 
 WORKDIR ~/notebooks

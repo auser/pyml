@@ -263,4 +263,10 @@ RUN source activate py3 && \
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
-CMD ["/opt/compute-container/entry.sh", "USER=auser"]
+
+ENV USER compute
+ENV USER_UID 1000
+ENV PATH $PATH:~/.local/bin
+
+WORKDIR ~/notebooks
+CMD ["/opt/compute-container/entry.sh"]
