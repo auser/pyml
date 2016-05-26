@@ -263,4 +263,4 @@ RUN source activate py3 && \
 EXPOSE 8888
 COPY entry.sh /opt/compute-container/entry.sh
 RUN chmod +x /opt/compute-container/entry.sh
-CMD ["/opt/compute-container/entry.sh"]
+CMD ["/opt/compute-container/entry.sh", "USER=auser"]
