@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 USER_UID=${USER_UID:-1001}
 USER_LOGIN=${USER:-jovyan}
@@ -27,16 +27,6 @@ if [[ ! $(id -u ${USER_LOGIN} 2>/dev/null) ]]; then
           "${USER_LOGIN}" >/dev/null
 fi
 
-echo<<EOF  | tee /home/${USER_LOGIN}/.theanorc
-[global]
-device = gpu
-floatX = float32
-optimizer_including=cudnn
-
-[lib]
-cnmem=0.9
-EOF
-
 # cp -r ~/.local ${USER_DIR}/.local
 # chown -R ${USER_LOGIN} ${USER_DIR}/.local
 
@@ -60,7 +50,6 @@ import os
 import sys
 
 os.environ['SHELL'] = '/bin/bash'
-os.environ['PYTHONPATH'] = '$PYTHONPATH:$NOTEBOOK_DIR'
 
 # Configure the environment
 os.environ['SPARK_HOME'] = '${SPARK_HOME}'
@@ -107,7 +96,6 @@ EOF
 # jupyter
 SUDO="sudo"
 (
-export HOME="${USER_DIR}"
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+cat /home/compute/.theanorc
 $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "source activate py2 && jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > ${USER_DIR}/jupyter.log 2>&1"}
 )

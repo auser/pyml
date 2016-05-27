@@ -6,7 +6,9 @@ RUN apt-get -y update && \
     wget \
     build-essential curl \
     cmake \
-    git
+    git && \
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN locale-gen en_US en_US.UTF-8
 RUN dpkg-reconfigure locales

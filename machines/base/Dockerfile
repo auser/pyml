@@ -21,7 +21,9 @@ RUN apt-get -y update && \
     wget \
     build-essential curl \
     cmake \
-    git
+    git && \
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN locale-gen en_US en_US.UTF-8
 RUN dpkg-reconfigure locales
@@ -50,10 +52,14 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
   libglib2.0-0 libxext6 libsm6 libxrender1 \
-  git mercurial subversion
+  git mercurial subversion && \
+  apt-get autoremove -yq \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
   wget --quiet https://repo.continuum.io/miniconda/Miniconda2-4.0.5-Linux-x86_64.sh && \
   /bin/bash /Miniconda2-4.0.5-Linux-x86_64.sh -f -b -p /opt/conda && \
+  conda clean -i -l -t -y && \
   rm Miniconda2-4.0.5-Linux-x86_64.sh
 
 RUN apt-get install -y curl grep sed dpkg && \
@@ -61,7 +67,8 @@ RUN apt-get install -y curl grep sed dpkg && \
   curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb && \
   dpkg -i tini.deb && \
   rm tini.deb && \
-  apt-get clean
+  apt-get autoremove -yq \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV PATH /opt/conda/bin:$PATH
 
@@ -77,8 +84,8 @@ RUN apt-get update -qq && \
       pkg-config build-essential cmake git \
       libx11-dev \
       unzip; \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Python 3 packages
 RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4
@@ -110,7 +117,9 @@ RUN source activate py3 && \
 RUN cp -r $HOME/.conda /etc/skel/.conda
 
 
-RUN apt-get update -yq && apt-get install -yq gfortran
+RUN apt-get update -yq && apt-get install -yq gfortran && \
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN git clone https://github.com/xianyi/OpenBLAS /usr/local/src/OpenBLAS
 
 RUN cd /usr/local/src/OpenBLAS && \
@@ -181,17 +190,19 @@ WORKDIR $INSTALL_ROOT/opencv/build
 
 ENV PY2_DIR "$CONDA_DIR/envs/py2"
 ENV PY3_DIR "$CONDA_DIR/envs/py3"
+ENV PY2_SITE_PACKAGES $($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+ENV PY3_SITE_PACKAGES $($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
 
 RUN apt-get install -yq software-properties-common && \
     add-apt-repository ppa:george-edison55/cmake-3.x && \
     apt-get update -yq && \
-    apt-get install -yq --only-upgrade cmake
+    apt-get install -yq --only-upgrade cmake && \
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
     # apt-get install -yq qt5-default libvtk6-dev
 
-RUN \
-  export PY2_SITE_PACKAGES=$($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])") && \
-  export PY3_SITE_PACKAGES=$($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])") && \
-  export PY2_INCLUDE_DIR=$($PY2_DIR/bin/python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") && \
+RUN echo "PY2_SITE_PACKAGES: $PY2_SITE_PACKAGES"
+RUN export PY2_INCLUDE_DIR=$($PY2_DIR/bin/python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") && \
   export PY3_INCLUDE_DIR=$($PY3_DIR/bin/python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") && \
 
   export CUDA_LIB_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib/stubs/:/usr/local/cuda/lib64/stubs/:$LD_LIBRARY_PATH && \
@@ -290,5 +301,10 @@ ENV USER compute
 ENV USER_UID 1000
 ENV PATH $PATH:~/.local/bin
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:${PY2_DIR}/lib:${PY3_DIR}/lib:/usr/local/cuda/lib:/usr/local/cuda/lib64
+ENV PY2_SITE_PACKAGES $($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+ENV PY3_SITE_PACKAGES $($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+
+RUN ls -la /home/compute && \
+    echo $PY2_SITE_PACKAGES
 
 CMD ["/opt/compute-container/entry.sh"]

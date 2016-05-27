@@ -1,11 +1,17 @@
-RUN apt-get -y update && apt-get -y install git bc make dpkg-dev libssl-dev && mkdir -p /usr/src/kernels && mkdir -p /opt/nvidia/nvidia_installers
+RUN apt-get -y update && apt-get -y install git bc make dpkg-dev libssl-dev && mkdir -p /usr/src/kernels && mkdir -p /opt/nvidia/nvidia_installers && \
+apt-get autoremove -yq \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN apt-get -y install software-properties-common python-software-properties
+RUN apt-get -y install software-properties-common python-software-properties && \
+apt-get autoremove -yq \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # install gcc 4.9 for newer kernels
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt-get update
-RUN apt-get install -y gcc-4.9 g++-4.9
+RUN apt-get install -y gcc-4.9 g++-4.9 && \
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.9
 
 ADD http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run /opt/nvidia

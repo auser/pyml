@@ -1,9 +1,13 @@
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
   libglib2.0-0 libxext6 libsm6 libxrender1 \
-  git mercurial subversion
+  git mercurial subversion && \
+  apt-get autoremove -yq \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
   wget --quiet https://repo.continuum.io/miniconda/Miniconda2-4.0.5-Linux-x86_64.sh && \
   /bin/bash /Miniconda2-4.0.5-Linux-x86_64.sh -f -b -p /opt/conda && \
+  conda clean -i -l -t -y && \
   rm Miniconda2-4.0.5-Linux-x86_64.sh
 
 RUN apt-get install -y curl grep sed dpkg && \
@@ -11,7 +15,8 @@ RUN apt-get install -y curl grep sed dpkg && \
   curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb && \
   dpkg -i tini.deb && \
   rm tini.deb && \
-  apt-get clean
+  apt-get autoremove -yq \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV PATH /opt/conda/bin:$PATH
 
@@ -27,8 +32,8 @@ RUN apt-get update -qq && \
       pkg-config build-essential cmake git \
       libx11-dev \
       unzip; \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Python 3 packages
 RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4

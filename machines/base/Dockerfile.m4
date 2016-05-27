@@ -38,5 +38,10 @@ ENV USER {{ NB_USER }}
 ENV USER_UID {{ NB_UID }}
 ENV PATH $PATH:~/.local/bin
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:${PY2_DIR}/lib:${PY3_DIR}/lib:/usr/local/cuda/lib:/usr/local/cuda/lib64
+ENV PY2_SITE_PACKAGES $($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+ENV PY3_SITE_PACKAGES $($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+
+RUN ls -la /home/compute && \
+    echo $PY2_SITE_PACKAGES
 
 CMD ["/opt/compute-container/entry.sh"]

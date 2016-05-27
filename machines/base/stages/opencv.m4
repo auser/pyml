@@ -10,17 +10,19 @@ WORKDIR $INSTALL_ROOT/opencv/build
 
 ENV PY2_DIR "$CONDA_DIR/envs/py2"
 ENV PY3_DIR "$CONDA_DIR/envs/py3"
+ENV PY2_SITE_PACKAGES $($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+ENV PY3_SITE_PACKAGES $($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
 
 RUN apt-get install -yq software-properties-common && \
     add-apt-repository ppa:george-edison55/cmake-3.x && \
     apt-get update -yq && \
-    apt-get install -yq --only-upgrade cmake
+    apt-get install -yq --only-upgrade cmake && \
+    apt-get autoremove -yq \
+      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
     # apt-get install -yq qt5-default libvtk6-dev
 
-RUN \
-  export PY2_SITE_PACKAGES=$($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])") && \
-  export PY3_SITE_PACKAGES=$($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])") && \
-  export PY2_INCLUDE_DIR=$($PY2_DIR/bin/python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") && \
+RUN echo "PY2_SITE_PACKAGES: $PY2_SITE_PACKAGES"
+RUN export PY2_INCLUDE_DIR=$($PY2_DIR/bin/python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") && \
   export PY3_INCLUDE_DIR=$($PY3_DIR/bin/python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") && \
 
   export CUDA_LIB_PATH=/usr/local/cuda-7.5/targets/x86_64-linux/lib/stubs/:/usr/local/cuda/lib64/stubs/:$LD_LIBRARY_PATH && \
