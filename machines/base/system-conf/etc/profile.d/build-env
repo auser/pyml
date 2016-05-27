@@ -1,0 +1,5 @@
+export PY2_DIR="$CONDA_DIR/envs/py2"
+export PY3_DIR="$CONDA_DIR/envs/py3"
+
+export PY2_SITE_PACKAGES=$($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+export PY3_SITE_PACKAGES=$($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")

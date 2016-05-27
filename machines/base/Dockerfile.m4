@@ -44,4 +44,5 @@ ENV PY3_SITE_PACKAGES $($PY3_DIR/bin/python -c "import site;print(site.getsitepa
 RUN ls -la /home/compute && \
     echo $PY2_SITE_PACKAGES
 
-CMD ["/opt/compute-container/entry.sh"]
+ENTRYPOINT ["tini", "--"]
+CMD ["/opt/compute-container/entry.sh", "/tmp/build-env"]

@@ -96,6 +96,5 @@ EOF
 # jupyter
 SUDO="sudo"
 (
-cat /home/compute/.theanorc
 $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "source activate py2 && jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > ${USER_DIR}/jupyter.log 2>&1"}
 )
