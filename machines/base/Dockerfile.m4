@@ -23,6 +23,18 @@ include(`ffmpeg.m4')
 
 include(`opencv.m4')
 
+ENV USER_UID ${USER_UID:-1001}
+ENV USER_LOGIN ${USER:-jovyan}
+ENV USER_FULL_NAME "${USER_FULL_NAME:-Compute container user}"
+ENV USER_DIR "/home/${USER_LOGIN}"
+ENV PASSWORD ${PASSWORD:-itsginger}
+ENV PYTHON_ENV ${PYTHON_ENV:-py2}
+
+ENV NOTEBOOK_PORT ${PORT:-8888}
+
+ENV JDIR "${USER_DIR}/.jupyter"
+ENV CONF_FILE "${JDIR}/jupyter_notebook_config.py"
+
 include(`torch.m4')
 include(`tensorflow.m4')
 
