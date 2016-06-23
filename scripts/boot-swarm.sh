@@ -44,6 +44,13 @@ function HELP {
   exit 1
 }
 
+if [ -f "$DIR/../.env" ]; then
+  e_log
+  e_log e_header ".env file found"
+  e_log
+  source "$DIR/../.env"
+fi
+
 while getopts :vdhp:ys:ct: FLAG; do
   case $FLAG in
     v) VERBOSE=true

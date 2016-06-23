@@ -15,6 +15,7 @@ S3_USER=${S3_USER:-}
 S3_SECRET=${S3_SECRET:-}
 BUCKET=${BUCKET:-}
 MOUNT=${MOUNT:-/mnt/data}
+DAEMONIZE=false
 
 function HELP {
   e_header "Help documentation"
@@ -22,6 +23,7 @@ function HELP {
   e_log
   e_log "-v" "verbose. Default: ${VERBOSE}"
   e_log "-b" "bucket to mount. Default: ${BUCKET}"
+  e_log "-d" "daemonize: Default: ${DAEMONIZE}"
   e_log "-n" "docker machine name. Default: ${MACHINE_NAME}"
   e_log "-m" "mount point. Default: ${MOUNT}"
   e_log "-u" "the s3 user. Default: ${S3_USER}"
@@ -32,7 +34,7 @@ function HELP {
   exit 1
 }
 
-while getopts :vhb:m:n:u:s: FLAG; do
+while getopts :vhdb:m:n:u:s: FLAG; do
   case $FLAG in
     v) VERBOSE=true
         ;;
@@ -46,26 +48,43 @@ while getopts :vhb:m:n:u:s: FLAG; do
         ;;
     h) HELP
         ;;
+    d) DAEMONIZE=true
+        ;;
     s) S3_SECRET="$OPTARG"
         ;;
     \?) ;;
   esac
 done
 
-if [[ $# -lt 1 ]]
-then
-  echo "set S3_USER and S3_SECRET env"
-  echo
-  echo "Usage: $0 bucket mountpoint"
-  echo "Example: $0 snuffy /mnt/snuffy"
-  exit
-fi
+# if [[ $# -lt 1 ]]
+# then
+#   echo "set S3_USER and S3_SECRET env"
+#   echo
+#   echo "Usage: $0 bucket mountpoint"
+#   echo "Example: $0 snuffy /mnt/snuffy"
+#   exit
+# fi
 
 CUDA_SO=$(docker-machine ssh $MACHINE_NAME ls /usr/lib/x86_64-linux-gnu/libcuda.* | \
           xargs -I{} echo '-v {}:{}')
 DEVICES=$(docker-machine ssh $MACHINE_NAME ls /dev/nvidia* | \
           xargs -I{} echo '--device {}:{}')
-echo "$CUDA_SO $DEVICES"
+
+CMD_OPTS="-p 8888:8888 $DEVICES $CUDA_SO"
+IMAGE="auser/base"
+
+if [ $DAEMONIZE != false ]; then
+  CMD_OPTS="$CMD_OPTS -d"
+fi
+
+e_log "docker run $CMD_OPTS $IMAGE"
+
+(
+  docker run $CMD_OPTS $IMAGE
+)
+
+# docker run $CMD_OPTS $IMAGE
+
 # export CUDA_SO=$(\ls /usr/lib/x86_64-linux-gnu/libcuda.* | \
 #                     xargs -I{} echo '-v {}:{}')
 # export DEVICES=$(\ls /dev/nvidia* | \
@@ -77,12 +96,11 @@ echo "$CUDA_SO $DEVICES"
 #
 # CUDA_SO=-v /usr/lib/x86_64-linux-gnu/libcuda.so:/usr/lib/x86_64-linux-gnu/libcuda.so -v /usr/lib/x86_64-linux-gnu/libcuda.so.1:/usr/lib/x86_64-linux-gnu/libcuda.so.1 -v /usr/lib/x86_64-linux-gnu/libcuda.so.352.93:/usr/lib/x86_64-linux-gnu/libcuda.so.352.93
 # $DEVICES $CUDA_SO \
-
-docker run --privileged \
-    -e S3User=$S3_USER \
-    -e S3Secret=$S3_SECRET \
-    -v $MOUNT:/mnt/mountpoint:shared \
-    --cap-add SYS_ADMIN $USER/volume_container $1 \
-    /mnt/mountpoint \
-    -o passwd_file=/etc/passwd-s3fs \
-    -d -d -f -o f2 -o curldbg
+# docker run --privileged \
+#     -e S3User=$S3_USER \
+#     -e S3Secret=$S3_SECRET \
+#     -v $MOUNT:/mnt/mountpoint:shared \
+#     --cap-add SYS_ADMIN $USER/volume_container $1 \
+#     /mnt/mountpoint \
+#     -o passwd_file=/etc/passwd-s3fs \
+#     -d -d -f -o f2 -o curldbg

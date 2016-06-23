@@ -71,6 +71,13 @@ while getopts :vdhp:ys:n:ct: FLAG; do
   esac
 done
 
+if [ -f "$DIR/../.env" ]; then
+  e_log
+  e_log e_header ".env file found"
+  e_log
+  source "$DIR/../.env"
+fi
+
 DRIVER_OPTIONS=""
 
 if [[ $PROVIDER == "virtualbox" ]]; then
