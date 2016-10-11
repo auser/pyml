@@ -24,17 +24,22 @@ MACHINES_DIR := machines
 # build/cuda-base:
 	# docker build $(DARGS) --rm --force-rm -t $(OWNER)/cuda-base:latest -f machines/base/Dockerfile-cuda-7.5-cudnn4-devel machines/base
 
-lib= ./$(MACHINES_DIR)/base
-dockerfile: $(lib)/stages/*.m4
-	@m4 -I $(lib)/stages -I $(lib) $(lib)/Dockerfile.m4 > Dockerfile.build
-	@env | j2 --format=env Dockerfile.build > $(lib)/Dockerfile
-	@rm Dockerfile.build
+lib= ./$(MACHINES_DIR)
+# dockerfile: $(lib)/stages/*.m4
+# 	@m4 -I $(lib)/stages -I $(lib) $(lib)/Dockerfile.m4 > Dockerfile.build
+# 	@env | j2 --format=env Dockerfile.build > $(lib)/Dockerfile
+# 	@rm Dockerfile.build
 
 test_build: dockerfile
 	docker build --rm --force-rm $(lib)
 
 vb_build:
 	cd $(MACHINES_DIR)/host && packer build --only=virtualbox-iso ./template.json
+
+dockerfile/%:
+	@m4 -I $(lib)/stages -I $(lib) $(lib)/$(notdir $@)/Dockerfile.m4 > $(lib)/$(notdir $@)/Dockerfile.build
+	@env | j2 --format=env $(lib)/$(notdir $@)/Dockerfile.build > $(lib)/$(notdir $@)/Dockerfile
+	@rm $(lib)/$(notdir $@)/Dockerfile.build
 
 build/%: DARGS?=
 
@@ -43,8 +48,8 @@ GIT_MASTER_HEAD_SHA:=$(shell git rev-parse --short=12 --verify HEAD)
 
 build-all: $(patsubst %,build/%, $(ALL_IMAGES))
 
-build/%:
-	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest ./machines/$(notdir $@)
+build/%: dockerfile/%
+	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest -f ./machines/$(notdir $@)/Dockerfile ./machines/$(notdir $@)
 
 up:
 	docker-compose -p pydock up -d

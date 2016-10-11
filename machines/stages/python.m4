@@ -36,8 +36,8 @@ RUN apt-get update -qq && \
       && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Python 3 packages
-RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4
-RUN $CONDA_DIR/bin/conda create --quiet --yes -n py2 python=2.7
+RUN $CONDA_DIR/bin/conda create --quiet --yes -n py3 python=3.4 && \
+    $CONDA_DIR/bin/conda create --quiet --yes -n py2 python=2.7
 
 # http://bugs.python.org/issue19846
 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
@@ -45,21 +45,28 @@ ENV LANG C.UTF-8
 
 COPY requirements.txt /tmp/requirements.txt
 RUN source activate py2 && \
+    $CONDA_DIR/bin/pip install --upgrade -I setuptools && \
     $CONDA_DIR/bin/conda install --yes \
     'cython=0.23*' \
+    'setuptools' \
     'numpy' \
     'statsmodels' && \
-    pip install --upgrade ipykernel jupyter notebook && \
+    pip install --upgrade ipykernel jupyter notebook --ignore-installed && \
     ipython kernel install && \
-    pip install --upgrade -r /tmp/requirements.txt
+    pip install --upgrade -r /tmp/requirements.txt --ignore-installed
 
 RUN source activate py3 && \
+    $CONDA_DIR/bin/pip install --upgrade -I setuptools && \
     $CONDA_DIR/bin/conda install --yes \
     'cython=0.23*' \
+    'setuptools' \
     'numpy' \
     'statsmodels' && \
-    pip install --upgrade ipykernel jupyter notebook && \
+    pip install --upgrade ipykernel jupyter notebook --ignore-installed && \
     ipython kernel install && \
-    pip install --upgrade -r /tmp/requirements.txt
+    pip install --upgrade -r /tmp/requirements.txt --ignore-installed
 
 RUN cp -r $HOME/.conda /etc/skel/.conda
+
+ENV PY2_SITE_PACKAGES $($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+ENV PY3_SITE_PACKAGES $($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")

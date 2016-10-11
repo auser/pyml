@@ -13,5 +13,4 @@ RUN apt-get -y update && \
 RUN locale-gen en_US en_US.UTF-8
 RUN dpkg-reconfigure locales
 
-
 include(`cleanup.m4')

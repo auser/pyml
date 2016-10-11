@@ -5,9 +5,9 @@ services:
   python23:
     build: ./machines/python23
     command: /bin/true
-  opencv:
-    build: ./machines/opencv
-    command: /bin/true
+  # opencv :
+    # build: ./machines/opencv
+    # comma nd: /bin/true
   tensorflow:
     build: ./machines/tensorflow
     command: /bin/true
@@ -19,7 +19,7 @@ services:
     command: /bin/true
 
   notebook:
-    build: ./machines/notebook
+    build: ./machines/notebook-opencv
     ports:
       - 8888:8888
     links:
