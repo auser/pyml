@@ -69,9 +69,6 @@ RUN source /etc/profile.d/build-env && \
 RUN make install && \
     ldconfig
 
-ENV PYTHONPATH $PYTHONPATH:$($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
-ENV PYTHONPATH $PYTHONPATH:$($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
-
 RUN source /etc/profile.d/build-env && \
     cp $INSTALL_ROOT/opencv/build/lib/cv2.so $PY2_SITE_PACKAGES/cv2.so && \
     cp $INSTALL_ROOT/opencv/build/lib/python3/cv2.cpython-34m.so $PY3_SITE_PACKAGES/cv2.so

@@ -7,7 +7,12 @@ include .env
 .PHONY: build-all help environment-check release-all
 
 ALL_STACKS:=base \
-						volume_container
+						volume_container \
+						python23 \
+						notebook \
+						tensorflow \
+						opencv \
+						torch
 	# notebook-opencv
 # ALL_STACKS:=python23 \
 	# spark \
@@ -45,8 +50,6 @@ build/%: DARGS?=
 
 MACHINE_PATH := $(subst build/,,,$@)
 GIT_MASTER_HEAD_SHA:=$(shell git rev-parse --short=12 --verify HEAD)
-
-build-all: $(patsubst %,build/%, $(ALL_IMAGES))
 
 build/%: dockerfile/%
 	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest -f ./machines/$(notdir $@)/Dockerfile ./machines/$(notdir $@)

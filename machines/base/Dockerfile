@@ -35,8 +35,8 @@ RUN dpkg-reconfigure locales
 ENV CONDA_DIR /opt/conda
 ENV PATH $CONDA_DIR/bin:$PATH
 ENV SHELL /bin/bash
-ENV USER_LOGIN ${USER_LOGIN:-compute}
-ENV USER_UID ${USER_UID:-1000}
+ENV USER_LOGIN compute
+ENV USER_UID 1000
 
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
@@ -51,6 +51,8 @@ ENV NOTEBOOK_PORT ${PORT:-8888}
 
 ENV JDIR "${USER_DIR}/.jupyter"
 ENV CONF_FILE "${JDIR}/jupyter_notebook_config.py"
+
+COPY system-conf /
 
 # Create ${USER_LOGIN} user with UID=${USER_UID} and in the 'users' group
 RUN useradd -m -s /bin/bash -u $USER_UID $USER_LOGIN && \

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-USER_UID=${USER_UID:-1001}
-USER_LOGIN=${USER:-jovyan}
+USER_UID=${USER_UID:-1000}
+USER_LOGIN=${USER_LOGIN:-compute}
 USER_FULL_NAME="${USER_FULL_NAME:-Compute container user}"
 USER_DIR="/home/${USER_LOGIN}"
 PASSWORD=${PASSWORD:-itsginger}
@@ -32,7 +32,6 @@ mkdir -p -m 700 ${NOTEBOOK_DIR}
 # adduser "${USER_LOGIN}" compute-users
 
 chown -R $USER_LOGIN $USER_DIR
-IPY_DIR=$(ipython locate)
 
 ## Create the config
 # SSL cert
@@ -92,6 +91,12 @@ EOF
 # chown -R $USER_LOGIN $(dirname $(ipython locate profile))
 
 # jupyter
+source activate py2
+JUPYTER=$(which jupyter)
 SUDO="sudo"
-HOME="${USER_DIR}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" $SUDO -E -u "${USER_LOGIN}" ${CMD:-/bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > ${USER_DIR}/jupyter.log 2>&1"}
+HOME="${USER_DIR}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" \
+  $SUDO -E -u "${USER_LOGIN}" \
+  ${CMD:-/bin/bash --login -c \
+    "$JUPYTER notebook --config=${CONF_FILE} \
+                        --ip='*' --no-browser > ${USER_DIR}/jupyter.log 2>&1"}
 # HOME="${USER_DIR}" /bin/bash --login -c "jupyter notebook --config=${CONF_FILE} --ip='*' --no-browser > jupyter.log 2>&1"

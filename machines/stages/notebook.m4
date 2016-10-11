@@ -1,9 +1,9 @@
 # Copy local configuration & fix perms
-COPY system-conf /
+COPY templates/system-conf /
 # RUN chown -R root:root /etc/sudoers.d && chmod 0440 /etc/sudoers.d/*
-RUN addgroup {{ NB_GROUP }}
+RUN addgroup {{ USER_GROUP }}
 
-# USER {{ NB_USER }}
+# USER {{ USER_LOGIN }}
 RUN mkdir /notebooks
 WORKDIR /notebooks
 

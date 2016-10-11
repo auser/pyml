@@ -72,3 +72,6 @@ RUN cp -r $HOME/.conda /etc/skel/.conda
 
 ENV PY2_SITE_PACKAGES $($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
 ENV PY3_SITE_PACKAGES $($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+
+ENV PYTHONPATH $PYTHONPATH:$($PY2_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
+ENV PYTHONPATH $PYTHONPATH:$($PY3_DIR/bin/python -c "import site;print(site.getsitepackages()[0])")
