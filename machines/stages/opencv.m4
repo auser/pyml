@@ -64,10 +64,11 @@ RUN source /etc/profile.d/build-env && \
           -D PYTHON3_LIBRARY=$PY3_DIR/lib/libpython3.4m.so \
           -D PYTHON3_NUMPY_INCLUDE_DIRS=$PY3_SITE_PACKAGES/numpy/core/include \
           .. && \
-      make -j8
+      make -j{{ NUM_CORES }}
 
 RUN make install && \
-    ldconfig
+    ldconfig && \
+    echo "Installed"
 
 RUN source /etc/profile.d/build-env && \
     cp $INSTALL_ROOT/opencv/build/lib/cv2.so $PY2_SITE_PACKAGES/cv2.so && \

@@ -11,7 +11,7 @@ RUN tar -zxvf $INSTALL_ROOT/tesseract.tar.gz && \
     ls -la && \
     /bin/bash ./autogen.sh && \
     ./configure && \
-    LDFLAGS="-L/usr/local/lib" CFLAGS="-I/usr/local/include" make -j ${NUM_CORES} && \
+    LDFLAGS="-L/usr/local/lib" CFLAGS="-I/usr/local/include" make -j {{ NUM_CORES }} && \
     make install && \
     ldconfig
 
