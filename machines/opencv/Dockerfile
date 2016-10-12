@@ -27,22 +27,23 @@ RUN apt-get update -qq -y && \
     autoconf automake libtool checkinstall
 
 WORKDIR $INSTALL_ROOT
-RUN git clone https://github.com/DanBloomberg/leptonica.git --branch v1.73 --depth 1 && \
-    cd leptonica && \
-    autoconf && ./configure && \
-    make -j 4 && \
-    make install && \
-    ldconfig
 
-#RUN wget http://www.leptonica.org/source/leptonica-1.73.tar.gz \
-#    -O $INSTALL_ROOT/leptonica.tar.gz && \
-#    tar -zxvf leptonica.tar.gz && \
-#    rm -rf leptonica.tar.gz && \
-#    cd leptonica-1.73 && \
-#    ./configure && \
+#RUN git clone https://github.com/DanBloomberg/leptonica.git --branch #v1.73 --depth 1 && \
+#    cd leptonica && \
+#    autoconf && ./configure && \
 #    make -j 4 && \
 #    make install && \
 #    ldconfig
+
+RUN wget http://www.leptonica.org/source/leptonica-1.73.tar.gz \
+    -O $INSTALL_ROOT/leptonica.tar.gz && \
+    tar -zxvf leptonica.tar.gz && \
+    rm -rf leptonica.tar.gz && \
+    cd leptonica-1.73 && \
+    ./configure && \
+    make -j 4 && \
+    make install && \
+    ldconfig
 
 #######################
 # End Leptonica
