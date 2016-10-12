@@ -1,4 +1,4 @@
-ersion: "2"
+version: "2"
 services:
   notebook:
     image: auser/opencv
@@ -6,8 +6,9 @@ services:
       - 8888:8888
     volumes:
       - .:/opt/compute
+
   jobmanager:
-    image: flink
+    image: biggis/flink:1.1.1
     ports:
       - "48081:8081"
     command: jobmanager
@@ -15,9 +16,25 @@ services:
       - /opt/flink/conf
 
   taskmanager:
-    image: flink
+    image: biggis/flink:1.1.1
     depends_on:
       - jobmanager
     command: taskmanager
     volumes_from:
       - jobmanager:ro
+
+
+  zookeeper:
+    image: confluent/zookeeper
+    ports:
+        - 2181
+ 
+  kafka:
+    image: auser/kafka
+    ports:
+        - "9092:9092"
+    links:
+        - zookeeper
+    environment:
+        KAFKA_LOG_CLEANUP_POLICY: compact
+        KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
