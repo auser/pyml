@@ -5,20 +5,6 @@
 # Change ./stacks/opencv-spark/Dockerfile.m4
 FROM auser/torch
 
-COPY requirements.txt /tmp/requirements.txt
-
-RUN source activate py2 && \
-  pip install -r /tmp/requirements.txt && \
-  jupyter nbextension enable --py --sys-prefix widgetsnbextension
-
-RUN source activate py3 && \
-  pip install -r /tmp/requirements.txt && \
-  jupyter nbextension enable --py --sys-prefix widgetsnbextension
-
-RUN rm /tmp/requirements.txt
-
-USER root
-
 # JAVA
 ARG JAVA_MAJOR_VERSION=8
 ARG JAVA_UPDATE_VERSION=92
@@ -51,3 +37,16 @@ RUN curl -sL --retry 3 \
 ENV PYTHONPATH $PYTHONPATH:$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.9-src.zip
 # ENV MESOS_NATIVE_LIBRARY /usr/local/lib/libmesos.so
 ENV SPARK_OPTS --driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info
+
+
+COPY requirements.txt /tmp/requirements.txt
+
+RUN source activate py2 && \
+  pip install -r /tmp/requirements.txt && \
+  jupyter nbextension enable --py --sys-prefix widgetsnbextension
+
+RUN source activate py3 && \
+  pip install -r /tmp/requirements.txt && \
+  jupyter nbextension enable --py --sys-prefix widgetsnbextension
+
+RUN rm /tmp/requirements.txt
