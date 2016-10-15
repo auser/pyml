@@ -139,15 +139,13 @@ RUN source /etc/profile.d/build-env && \
           -D PYTHON3_LIBRARY=$PY3_DIR/lib/libpython3.4m.so \
           -D PYTHON3_NUMPY_INCLUDE_DIRS=$PY3_SITE_PACKAGES/numpy/core/include \
           .. && \
-      make -j4
-
-RUN make install && \
-    ldconfig && \
-    echo "Installed"
-
-RUN source /etc/profile.d/build-env && \
-    cp $INSTALL_ROOT/opencv/build/lib/cv2.so $PY2_SITE_PACKAGES/cv2.so && \
-    cp $INSTALL_ROOT/opencv/build/lib/python3/cv2.cpython-34m.so $PY3_SITE_PACKAGES/cv2.so
+      make -j4 && \
+      make install && \
+      ldconfig && \
+      source /etc/profile.d/build-env && \
+      cp $INSTALL_ROOT/opencv/build/lib/cv2.so $PY2_SITE_PACKAGES/cv2.so && \
+      cp $INSTALL_ROOT/opencv/build/lib/python3/cv2.cpython-34m.so $PY3_SITE_PACKAGES/cv2.so && \
+      rm -rf $INSTALL_ROOT/opencv/build
 
 # RUN cp $INSTALL_ROOT/opencv/build/lib/cv2.so /usr/local/lib/python2.7/ && \
     # cp $INSTALL_ROOT/opencv/build/lib/cv2.so /usr/local/lib/python3.4/
