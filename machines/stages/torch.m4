@@ -12,7 +12,7 @@ RUN apt-get install -y build-essential \
 	python-software-properties \
   software-properties-common \
 	libfftw3-dev sox libsox-dev libsox-fmt-all \
-	libopenblas-dev libreadline-dev
+	libopenblas-dev libreadline-dev libssl-dev
 
 #nodejs npm \
 

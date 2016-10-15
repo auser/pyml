@@ -30,6 +30,7 @@ RUN dpkg-reconfigure locales
 
 ## CLEANUP
 
+RUN apt-get -yq clean && apt-get autoclean
 
 # Configure environment
 ENV CONDA_DIR /opt/conda

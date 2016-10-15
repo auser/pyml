@@ -6,13 +6,13 @@ include .env
 
 .PHONY: build-all help environment-check release-all
 
-ALL_STACKS:=base \
-						volume_container \
-						python23 \
-						notebook \
-						tensorflow \
-						opencv \
-						torch
+ALL_STACKS:=build/base \
+						build/python23 \
+						build/notebook \
+						build/tensorflow \
+						build/opencv \
+						build/torch \
+						build/kafka
 	# notebook-opencv
 # ALL_STACKS:=python23 \
 	# spark \
@@ -62,8 +62,9 @@ GIT_MASTER_HEAD_SHA:=$(shell git rev-parse --short=12 --verify HEAD)
 build/%: dockerfile/%
 	docker build $(DARGS) --rm --force-rm -t $(OWNER)/$(notdir $@):latest -f ./machines/$(notdir $@)/Dockerfile ./machines/$(notdir $@)
 
+build-all: $(ALL_STACKS)
+
 stacks/%: stacksdockerfile/%
-	@echo "hi"
 	docker-compose $(DARGS) -f $(STACKS_DIR)/$(notdir $@)/docker-compose.yml build
 
 up:
