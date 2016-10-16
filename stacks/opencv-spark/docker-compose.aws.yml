@@ -1,0 +1,20 @@
+version: "2"
+services:
+  notebook:
+    volumes:
+      - /home/ubuntu/notebooks:/home/compute/notebooks
+
+  # zookeeper:
+  #   image: confluent/zookeeper
+  #   ports:
+  #       - 2181
+ 
+  # kafka:
+  #   image: auser/kafka
+  #   ports:
+  #       - "9092:9092"
+  #   links:
+  #       - zookeeper
+  #   environment:
+  #       KAFKA_LOG_CLEANUP_POLICY: compact
+  #       KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
