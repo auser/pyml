@@ -1,8 +1,8 @@
 FROM auser/opencv
 
 ## Torch
-RUN apt-get update && apt-get -y upgrade
-RUN apt-get install -y build-essential \
+RUN apt-get update && apt-get -yq --force-yes upgrade
+RUN apt-get install -yq build-essential \
 	curl git cmake \
 	libqt4-core libqt4-gui libqt4-dev \
 	libjpeg-dev libpng-dev \
@@ -37,3 +37,7 @@ RUN source activate py2 \
   && cd /usr/local/itorch \
   && luarocks make \
   && cp -r /root/.ipython/* /usr/local/share/jupyter/
+
+## CLEANUP
+
+RUN apt-get -yq clean && apt-get autoclean
