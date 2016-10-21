@@ -67,6 +67,8 @@ build-all: $(ALL_STACKS)
 stacks/%: stacksdockerfile/%
 	docker-compose $(DARGS) -f $(STACKS_DIR)/$(notdir $@)/docker-compose.yml build
 
+
+
 up:
 	docker-compose -p pydock up -d
 

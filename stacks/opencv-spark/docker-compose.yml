@@ -4,10 +4,15 @@ services:
     build: .
     ports:
       - 8888:8888
+      - 3002:3002
     links:
       - sparkmaster
     volumes:
       - ../../notebooks:/home/compute/notebooks
+    extra_hosts:
+      - "dockerhost:$DOCKERHOST"
+    networks:
+      - host
 
   sparkmaster:
     image: gettyimages/spark
@@ -75,3 +80,6 @@ services:
   #   environment:
   #       KAFKA_LOG_CLEANUP_POLICY: compact
   #       KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
+
+networks:
+  host:
