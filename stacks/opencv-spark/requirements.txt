@@ -2,3 +2,6 @@ google-api-python-client==1.5.3
 googleanalytics==0.23.0
 gmaps==0.3.5
 py4j==0.10.3
+pygeocoder
+reverse_geocoder
+jupyterthemes
