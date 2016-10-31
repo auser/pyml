@@ -1,3 +1,4 @@
 .hook.json
 notebooks/
 packer_cache
+.python-version
