@@ -78,6 +78,13 @@ down:
 backup:
 	docker run --volumes-from pydock_core_1 -v $(CURDIR):/backup ubuntu bash -c "cd /home/compute/notebooks && tar cvfz /backup/backup.tar.gz ."
 
+backup_aws:
+ 	rsync -e 'ssh -i /Users/auser/.docker/machine/machines/aws02/id_rsa' \
+	 			-avhW \
+				--exclude='.git' --exclude='*.desktop.js' --exclude='*.pyc' \
+				ubuntu@$(docker-machine ip aws02):/home/ubuntu/notebooks \
+				~/Development/ml/mine/notebooks/notebook-aws02/
+
 restore:
 	docker run --volumes-from pydock_core_1 -v $(CURDIR):/backup ubuntu bash -c "cd /home/compute/notebooks && tar xfz /backup/backup.tar.gz"
 
