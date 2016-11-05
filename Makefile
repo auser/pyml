@@ -4,7 +4,7 @@ DARGS?=
 
 include .env
 
-.PHONY: build-all help environment-check release-all
+.PHONY: build-all help environment-check release-all backup-aws
 
 ALL_STACKS:=build/base \
 						build/python23 \
@@ -67,23 +67,21 @@ build-all: $(ALL_STACKS)
 stacks/%: stacksdockerfile/%
 	docker-compose $(DARGS) -f $(STACKS_DIR)/$(notdir $@)/docker-compose.yml build
 
-
-
 up:
-	docker-compose -p pydock up -d
+	docker-compose -p pyml up -d
 
 down:
-	docker-compose -p pydock stop
+	docker-compose -p pyml stop
 
 backup:
 	docker run --volumes-from pydock_core_1 -v $(CURDIR):/backup ubuntu bash -c "cd /home/compute/notebooks && tar cvfz /backup/backup.tar.gz ."
 
-backup_aws:
+backup-aws:
  	rsync -e 'ssh -i /Users/auser/.docker/machine/machines/aws02/id_rsa' \
 	 			-avhW \
 				--exclude='.git' --exclude='*.desktop.js' --exclude='*.pyc' \
 				ubuntu@$(docker-machine ip aws02):/home/ubuntu/notebooks \
-				~/Development/ml/mine/notebooks/notebook-aws02/
+				./notebooks/aws02/
 
 restore:
 	docker run --volumes-from pydock_core_1 -v $(CURDIR):/backup ubuntu bash -c "cd /home/compute/notebooks && tar xfz /backup/backup.tar.gz"
