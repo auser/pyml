@@ -16,3 +16,4 @@ mock
 pytest
 scikit-learn
 pillow
+scikit-image

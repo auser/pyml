@@ -4,7 +4,8 @@ DARGS?=
 
 include .env
 
-.PHONY: build-all help environment-check release-all backup-aws
+.PHONY: build-all help environment-check release-all
+.PHONY: backup
 
 ALL_STACKS:=build/base \
 						build/python23 \
@@ -76,12 +77,12 @@ down:
 backup:
 	docker run --volumes-from pydock_core_1 -v $(CURDIR):/backup ubuntu bash -c "cd /home/compute/notebooks && tar cvfz /backup/backup.tar.gz ."
 
-backup-aws:
+backup-%:
  	rsync -e 'ssh -i /Users/auser/.docker/machine/machines/aws02/id_rsa' \
 	 			-avhW \
 				--exclude='.git' --exclude='*.desktop.js' --exclude='*.pyc' \
-				ubuntu@$(docker-machine ip aws02):/home/ubuntu/notebooks \
-				./notebooks/aws02/
+				ubuntu@$(docker-machine ip $@):/home/ubuntu/notebooks \
+				./notebooks/$@/
 
 restore:
 	docker run --volumes-from pydock_core_1 -v $(CURDIR):/backup ubuntu bash -c "cd /home/compute/notebooks && tar xfz /backup/backup.tar.gz"
