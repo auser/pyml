@@ -33,4 +33,5 @@ for PYTHONVER in 2 3 ; do
   $PIP install --no-cache-dir bokeh
   $PIP install --no-cache-dir mock
   $PIP install --no-cache-dir pytest
+  $PIP install --no-cache-dir quiver_engine
 done
